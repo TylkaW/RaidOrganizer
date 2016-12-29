@@ -13,7 +13,7 @@
 ## X-Embeds: Ace2
 
 ## SavedVariables: RaidOrganizerDB
-## SavedVariablesPerCharacter: RaidOrganizerDBPerChar raider
+## SavedVariablesPerCharacter: RaidOrganizerDBPerChar raider current_set
 
 Libs\AceLibrary\AceLibrary.lua
 Libs\AceOO-2.0\AceOO-2.0.lua

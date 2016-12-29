@@ -150,7 +150,7 @@
     <!-- {{{ Template fuer pool, 20 slots  -->
     <Frame name="RaidOrganizerDialogRaiderpoolTemplate" inherits="RaidOrganizerDialogGroupTemplate" virtual="true">
         <Size>
-            <AbsDimension x="100" y="313"/>
+            <AbsDimension x="98" y="313"/>
         </Size>
         <Frames>
             <!-- Slots {{{ -->
@@ -272,6 +272,86 @@
 			<Button name="$parentSlot24" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" relativeTo="$parentSlot23" relativePoint="BOTTOMLEFT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot25" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot1" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot26" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot2" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot27" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot3" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot28" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot4" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot29" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot5" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot30" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot6" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot31" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot7" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot32" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot8" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot33" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot9" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot34" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot10" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot35" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot11" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot36" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot12" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot37" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot13" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot38" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot14" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot39" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot15" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+			<Button name="$parentSlot40" hidden="true" inherits="RaidOrganizerDialogSlotTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot16" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
             <!-- }}} -->
