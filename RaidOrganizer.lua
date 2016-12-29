@@ -1855,7 +1855,9 @@ function RaidOrganizer:AutoFill() -- {{{
 								if engClass == groupclasses[group][slot] then
 									-- der spieler passt, einteilen
 									raider[RaidOrganizerDialog.selectedTab][name][group+1] = 1
-									raider[RaidOrganizerDialog.selectedTab][name][1] = nil
+									if not RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() then 
+										raider[RaidOrganizerDialog.selectedTab][name][1] = nil
+									end
 									-- neu aufbauen (impliziert refresh-tables)
 									self:UpdateDialogValues()
 									break; -- naechster durchlauf
