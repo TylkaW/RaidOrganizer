@@ -1931,7 +1931,7 @@ function RaidOrganizer:WriteTooltipText(id)
 	GameTooltip:AddDoubleLine( "________", "____________", 1, 1, 1, 1, 1, 1);
 	local playerNameTable = {}
 	for group=1, self.CONST.NUM_GROUPS[id] do
-		local groupName = self.db.account.sets[id][current_set[RaidOrganizerDialog.selectedTab]].Beschriftungen[group]
+		local groupName = self.db.account.sets[id][current_set[id]].Beschriftungen[group]
 		if groupName == "CROSS" then
 			color = {1, 0, 0};
 		elseif groupName == "SQUARE" then
