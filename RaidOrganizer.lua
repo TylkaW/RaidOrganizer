@@ -2001,7 +2001,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if (prefix ~= "RaidOrganizer" or type ~= "RAID") then return end
 
 	if UnitInRaid('player') then
-		local _, _, askPattern, tab_id = string.find(message, '(%a+)%s(%d+)');
+		local _, _, askPattern, tab_id = string.find(message, '(%a+)%s+(%d+)');
 		if (askPattern == "ONLOAD") then
 			if sender == UnitName('player') then
 				return
@@ -2026,7 +2026,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 			DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Syncing " .. RaidOrganizer_Tabs[tonumber(tab_id)][1] .. " assignment from " .. sender);
 			return
 		end
-		local pattern = '(%d+)%s(%d+)';
+		local pattern = '(%d+)%s+(%d+)';
 		local _, _, tab_id, length  = string.find(message, pattern);
 		tab_id = tonumber(tab_id);
 		length = tonumber(length);
@@ -2037,7 +2037,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 		end
 		
 		for i = 1, length do
-			pattern = pattern .. '%s(%a+)%s(%d+)';
+			pattern = pattern .. '%s+(%a+)%s+(%d+)';
 		end
 		local raider_table  = {string.find(message, pattern)};
 		
@@ -2053,6 +2053,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 			for j = 1, string.len(raider_table[4 + i * 2]) do
 				charGroup = tonumber(string.sub(raider_table[4 + i * 2], j, j));
 				raider[tab_id][charName][charGroup + 1] = 1;
+				raider[tab_id][charName][1] = nil;
 			end
 		end
 		if RaidOrganizerDialog:IsShown() then
@@ -2131,7 +2132,7 @@ function RaidOrganizer:RaidOrganizer_SendSync(id)
 		if length > 200 then
 			msg = tostring(tab_id) .. " " .. tostring(nbPlayers - 1) .. " " .. msg;
 			SendAddonMessage("RaidOrganizer", msg, "RAID")
-			msg = tmp_msg;
+			msg = tmp_msg .. " ";
 			length = string.len(tmp_msg);
 			nbPlayers = 1;
 		else
