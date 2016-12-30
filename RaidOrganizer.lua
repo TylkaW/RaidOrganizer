@@ -854,7 +854,7 @@ function RaidOrganizer_SetTab(id)
 
 	RaidOrganizerDialog.selectedTab = id;
 	RaidOrganizerDialogEinteilungTitle:SetText(RaidOrganizer_Tabs[id][1]);
-	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, current_set[RaidOrganizerDialog.selectedTab], current_set[RaidOrganizerDialog.selectedTab]);
+	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, current_set[id], current_set[id]);
 	RaidOrganizer:LoadCurrentLabels()
 	RaidOrganizer:UpdateDialogValues();
 end
@@ -1832,7 +1832,7 @@ function RaidOrganizer:AutoFill() -- {{{
 			while tableIndex <= progress do
 				raider[RaidOrganizerDialog.selectedTab][name][tableGroup[tableIndex]+1] = 1
 				tableIndex = tableIndex + 1
-				DEFAULT_CHAT_FRAME:AddMessage(tableIndex .. " " .. progress .. " " .. name)
+				--DEFAULT_CHAT_FRAME:AddMessage(tableIndex .. " " .. progress .. " " .. name)
 			end
 			progress = progress + table.getn(tableGroup)/nbBuffer
 		end
@@ -1899,8 +1899,6 @@ function RaidOrganizer:TabButton_OnClick(id)
 		id = this:GetID();
 	end
 	RaidOrganizer_SetTab(id);
-	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, current_set[RaidOrganizerDialog.selectedTab], current_set[RaidOrganizerDialog.selectedTab]); 
-	RaidOrganizer:LoadCurrentLabels()
 	RaidOrganizer:Dialog()
 end
 
