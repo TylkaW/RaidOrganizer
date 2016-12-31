@@ -34,9 +34,9 @@ local options = {
 				RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
 				RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
 			end,
-			min = 0.3,
+			min = 0.5,
 			max = 2,
-			step = 0.05,
+			step = 0.01,
 			order = 2
 		},
 		showMinimap = {
@@ -2294,9 +2294,9 @@ function CreateDewDropMenu(level, value)
 		dewdrop:AddLine( 'text', 'Scale',
 						 'hasArrow', true,
 						 'hasSlider', true,
-						 'sliderMin', 0.3,
+						 'sliderMin', 0.5,
 						 'sliderMax', 2,
-						 'sliderStep', 0.05,
+						 'sliderStep', 0.01,
 						 'sliderValue', RaidOrganizer.db.char.scale,
 						 'sliderFunc', function(value)
 								RaidOrganizer.db.char.scale = value
