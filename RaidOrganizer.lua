@@ -2195,6 +2195,9 @@ end
 function RaidOrganizer_Minimap_OnEnter()
 	GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT");
 	GameTooltip:AddLine("Raid Organizer");
+	GameTooltip:AddLine("Left click to show/hide bar", 0,1,0);
+	GameTooltip:AddLine("Right click to show options", 0,1,0);
+	GameTooltip:AddLine("Left click and drag to move", 0,1,0);
 	GameTooltip:Show();
 end
 
