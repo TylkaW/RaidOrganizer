@@ -4,9 +4,9 @@ local dewdrop = AceLibrary("Dewdrop-2.0")
 local options = {
     type = 'group',
     args = {
-        show = {
+        showButtons = {
             type = 'execute',
-            name = 'Show/Hide Dialog',
+            name = 'Show/Hide Buttons',
             desc = L["SHOW_DIALOG"],
             func = function() RaidOrganizer:ShowButtons() end,
         },
@@ -22,13 +22,20 @@ local options = {
 			name = 'Horizontal display',
 			desc = 'Show buttons horizontally or vertically',
 			get = function() return RaidOrganizer.db.char.horizontal end,
-            set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal end,
+            set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
 		},
 		showMinimap = {
 			type = 'execute',
-			name = 'Show/hide Minimap icon',
+			name = 'Toggle Minimap icon',
 			desc = 'Show/Hide Minimap icon',
-			func = function() if RaidOrganizerMinimapButton.options.hideminimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end RaidOrganizerMinimapButton.options.hideminimap = not RaidOrganizerMinimapButton.options.hideminimap end,
+			func = function() if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Hide(); else RaidOrganizerMinimapButton:Show(); end RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap end,
+		},
+		lockMinimap = {
+			type = 'toggle',
+			name = 'Lock Minimap',
+			desc = 'Lock Minimap button',
+			get = function() return RaidOrganizer.db.char.lockMinimap end,
+            set = function() RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap end,
 		},
    }
 }
@@ -140,8 +147,11 @@ RaidOrganizer:RegisterChatCommand({"/RaidOrganizer", "/raidorg", "/ro"}, options
 RaidOrganizer:RegisterDB("RaidOrganizerDB", "RaidOrganizerDBPerChar")
 RaidOrganizer:RegisterDefaults('char', {
     chan = "",
+	show = false,
     autosort = true,
 	horizontal = false,
+	minimapLock = false,
+	minimapHide = false,
 })
 --[[
 self.db.account.sets = {
@@ -550,7 +560,7 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
     -- standard fuer dropdown setzen
     UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab], RO_CurrentSet[RaidOrganizerDialog.selectedTab]);
-	if UnitInRaid('player') then
+	if UnitInRaid('player') and RaidOrganizer.db.char.show then
 		self:ShowButtons()
 	end
     self:LoadCurrentLabels()
@@ -1918,15 +1928,19 @@ function RaidOrganizer:ShowButtons()
 		RaidOrganizerButtonsVertical:Hide()
 		if RaidOrganizerButtonsHorizontal:IsShown() then
 			RaidOrganizerButtonsHorizontal:Hide()
+			RaidOrganizer.db.char.show = false
 		else
 			RaidOrganizerButtonsHorizontal:Show()
+			RaidOrganizer.db.char.show = true
 		end
 	else
 		RaidOrganizerButtonsHorizontal:Hide()
 		if RaidOrganizerButtonsVertical:IsShown() then
 			RaidOrganizerButtonsVertical:Hide()
+			RaidOrganizer.db.char.show = false
 		else
 			RaidOrganizerButtonsVertical:Show()
+			RaidOrganizer.db.char.show = true
 		end
 	end
 end
@@ -2167,16 +2181,16 @@ end
 
 function RaidOrganizer_Minimap_Position(x,y)
 	if ( x or y ) then
-		if ( x ) then if ( x < 0 ) then x = x + 360; end RaidOrganizerMinimapButton.options.x = x; end
-		if ( y ) then RaidOrganizerMinimapButton.options.y = y; end
+		if ( x ) then if ( x < 0 ) then x = x + 360; end MinimapPosition.x = x; end
+		if ( y ) then MinimapPosition.y = y; end
 	end
-	x, y = RaidOrganizerMinimapButton.options.x, RaidOrganizerMinimapButton.options.y
+	x, y = MinimapPosition.x, MinimapPosition.y
 
 	RaidOrganizerMinimapButton:SetPoint("TOPLEFT","Minimap","TOPLEFT",53-((80+(y))*cos(x)),((80+(y))*sin(x))-55);
 end
 
 function RaidOrganizer_Minimap_DragStart()
-	if RaidOrganizerMinimapButton.options.lockminimap == true then 
+	if RaidOrganizer.db.char.lockMinimap then 
 		return 
 	end
 	this:SetScript("OnUpdate", RaidOrganizer_Minimap_DragUpdate);
@@ -2201,7 +2215,7 @@ function RaidOrganizer_Minimap_DragUpdate()
 end
 
 function RaidOrganizer_Minimap_Update()
-	if ( RaidOrganizerMinimapButton.options.hideminimap ) then
+	if ( RaidOrganizer.db.char.showMinimap ) then
 		RaidOrganizerMinimapButton:Hide();
 	else
 		RaidOrganizerMinimapButton:Show();
@@ -2222,23 +2236,22 @@ function RaidOrganizerMinimapButton_OnInitialize()
 	
 	RaidOrganizerMinimapButton:SetNormalTexture("Interface\\Icons\\Spell_Nature_Polymorph_Cow")
 	RaidOrganizerMinimapButton:SetPushedTexture("Interface\\Icons\\Spell_Nature_Polymorph_Cow")
-	if RaidOrganizerMinimapButton.options == nil then
-		RaidOrganizerMinimapButton.options = {}
-	end
-	if RaidOrganizerMinimapButton.options.x == nil or RaidOrganizerMinimapButton.options.y == nil then
-		RaidOrganizerMinimapButton.options.x = 0
-		RaidOrganizerMinimapButton.options.y = 0
+	
+	if MinimapPosition == nil then
+		MinimapPosition = {x=0, y=0}
 	end
 	
-	if RaidOrganizerMinimapButton.options.lockminimap == nil then
-		RaidOrganizerMinimapButton.options.lockminimap = false
+	if RaidOrganizer.db.char.lockMinimap == nil then
+		RaidOrganizer.db.char.lockMinimap = false
 	end
 	
-	if RaidOrganizerMinimapButton.options.hideminimap == nil then
-		RaidOrganizerMinimapButton.options.hideminimap = false
+	if RaidOrganizer.db.char.showMinimap == nil then
+		RaidOrganizer.db.char.showMinimap = true
 	end
-	if not RaidOrganizerMinimapButton.options.hideminimap then
+	
+	if RaidOrganizer.db.char.showMinimap then
 		RaidOrganizerMinimapButton:Show()
+		RaidOrganizer_Minimap_Position(nil, nil)
 	end
 end
 
@@ -2247,10 +2260,14 @@ function CreateDewDropMenu(level, value)
     if level == 1 then
         dewdrop:AddLine( 'text', "RaidOrganizer Options", 'isTitle', true )
         dewdrop:AddLine( 'text', 'Show Buttons',
-						 'checked', RaidOrganizerButtonsHorizontal:IsShown() or RaidOrganizerButtonsVertical:IsShown(),
 						 'func', function() RaidOrganizer:ShowButtons(); end,
             			 'tooltipTitle', 'Show Buttons',
             			 'tooltipText', 'Click to show buttons'
+            		     )
+        dewdrop:AddLine( 'text', 'Show Dialog',
+						 'func', function() RaidOrganizer:Dialog(); end,
+            			 'tooltipTitle', 'Show Dialog',
+            			 'tooltipText', 'Click to show dialog'
             		     )
         dewdrop:AddLine( 'text', 'Horizontal Display',
 						 'checked', RaidOrganizer.db.char.horizontal,
@@ -2269,17 +2286,17 @@ function CreateDewDropMenu(level, value)
 	elseif level == 2 then    
         if value == "minimapOptions" then
 			dewdrop:AddLine( 'text', 'Lock minimap button',
-						 'checked', RaidOrganizerMinimapButton.options.lockminimap,
+						 'checked', RaidOrganizer.db.char.lockMinimap,
                          'func', function()
-                            RaidOrganizerMinimapButton.options.lockminimap = not RaidOrganizerMinimapButton.options.lockminimap;
+                            RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap;
                          end,
                          'tooltipTitle', 'Lock minimap button',
             			 'tooltipText', 'Check to lock minimap button'
                          )
 			dewdrop:AddLine( 'text', 'Hide minimap button',
-						 'checked', RaidOrganizerMinimapButton.options.hideminimap,
+						 'checked', not RaidOrganizer.db.char.showMinimap,
                          'func', function()
-                            RaidOrganizerMinimapButton.options.hideminimap = not RaidOrganizerMinimapButton.options.hideminimap; if RaidOrganizerMinimapButton.options.hideminimap then RaidOrganizerMinimapButton:Hide(); end
+                            RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if not RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Hide(); else RaidOrganizerMinimapButton:Show(); end
                          end,
                          'tooltipTitle', 'Hide minimap button',
             			 'tooltipText', 'Check to hide minimap button'

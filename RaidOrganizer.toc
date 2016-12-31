@@ -10,7 +10,7 @@
 ## X-Embeds: Ace2
 
 ## SavedVariables: RaidOrganizerDB
-## SavedVariablesPerCharacter: RaidOrganizerDBPerChar RO_RaiderTable RO_CurrentSet RaidOrganizerMinimapButton.options
+## SavedVariablesPerCharacter: RaidOrganizerDBPerChar RO_RaiderTable RO_CurrentSet MinimapPosition
 
 Libs\AceLibrary\AceLibrary.lua
 Libs\AceOO-2.0\AceOO-2.0.lua
