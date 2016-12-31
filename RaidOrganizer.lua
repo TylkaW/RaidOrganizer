@@ -24,11 +24,27 @@ local options = {
 			get = function() return RaidOrganizer.db.char.horizontal end,
             set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
 		},
+		scale = {
+			type = 'range',
+			name = "Button frame scale",
+			desc = "Button fram scale",
+			get = function() return RaidOrganizer.db.char.scale end,
+			set = function(v)
+				RaidOrganizer.db.char.scale = v
+				RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
+				RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
+			end,
+			min = 0.3,
+			max = 2,
+			step = 0.05,
+			order = 2
+		},
 		showMinimap = {
-			type = 'execute',
+			type = 'toggle',
 			name = 'Toggle Minimap icon',
 			desc = 'Show/Hide Minimap icon',
-			func = function() if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Hide(); else RaidOrganizerMinimapButton:Show(); end RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap end,
+			get = function() return RaidOrganizer.db.char.showMinimap end,
+            set = function() RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end end,
 		},
 		lockMinimap = {
 			type = 'toggle',
@@ -560,7 +576,10 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
     -- standard fuer dropdown setzen
     UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab], RO_CurrentSet[RaidOrganizerDialog.selectedTab]);
+	if not self.db.char.scale then self.db.char.scale = 1.0 end
 	if UnitInRaid('player') and RaidOrganizer.db.char.show then
+		RaidOrganizerButtonsHorizontal:SetScale(tonumber(self.db.char.scale))
+		RaidOrganizerButtonsVertical:SetScale(tonumber(self.db.char.scale))
 		self:ShowButtons()
 	end
     self:LoadCurrentLabels()
@@ -2240,6 +2259,7 @@ function RaidOrganizerMinimapButton_OnInitialize()
 	if MinimapPosition == nil then
 		MinimapPosition = {x=0, y=0}
 	end
+	RaidOrganizer_Minimap_Position(nil, nil)
 	
 	if RaidOrganizer.db.char.lockMinimap == nil then
 		RaidOrganizer.db.char.lockMinimap = false
@@ -2251,7 +2271,6 @@ function RaidOrganizerMinimapButton_OnInitialize()
 	
 	if RaidOrganizer.db.char.showMinimap then
 		RaidOrganizerMinimapButton:Show()
-		RaidOrganizer_Minimap_Position(nil, nil)
 	end
 end
 
@@ -2268,6 +2287,21 @@ function CreateDewDropMenu(level, value)
 						 'func', function() RaidOrganizer:Dialog(); end,
             			 'tooltipTitle', 'Show Dialog',
             			 'tooltipText', 'Click to show dialog'
+            		     )
+		dewdrop:AddLine( 'text', 'Scale',
+						 'hasArrow', true,
+						 'hasSlider', true,
+						 'sliderMin', 0.3,
+						 'sliderMax', 2,
+						 'sliderStep', 0.05,
+						 'sliderValue', RaidOrganizer.db.char.scale,
+						 'sliderFunc', function(value)
+								RaidOrganizer.db.char.scale = value
+								RaidOrganizerButtonsHorizontal:SetScale(value)
+								RaidOrganizerButtonsVertical:SetScale(value)
+							end,
+            			 'tooltipTitle', 'Bar Scale',
+            			 'tooltipText', 'Set Bar Scale'
             		     )
         dewdrop:AddLine( 'text', 'Horizontal Display',
 						 'checked', RaidOrganizer.db.char.horizontal,
