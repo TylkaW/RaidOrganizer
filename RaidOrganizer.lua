@@ -1,4 +1,5 @@
 local L = AceLibrary("AceLocale-2.1"):GetInstance("RaidOrganizer", true)
+local dewdrop = AceLibrary("Dewdrop-2.0")
 
 local options = {
     type = 'group',
@@ -23,7 +24,13 @@ local options = {
 			get = function() return RaidOrganizer.db.char.horizontal end,
             set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal end,
 		},
-    }
+		showMinimap = {
+			type = 'execute',
+			name = 'Show/hide Minimap icon',
+			desc = 'Show/Hide Minimap icon',
+			func = function() if RaidOrganizerMinimapButton.options.hideminimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end RaidOrganizerMinimapButton.options.hideminimap = not RaidOrganizerMinimapButton.options.hideminimap end,
+		},
+   }
 }
 -- units
 
@@ -463,11 +470,11 @@ function RaidOrganizer:OnInitialize() -- {{{
         hasEditBox = 1,
     }; --}}}
 
-	if not current_set then
-		current_set = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
+	if not RO_CurrentSet then
+		RO_CurrentSet = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
 	end
-	if not raider then
-		raider = {{}, {}, {}, {}, {}, {}, {}, {}}
+	if not RO_RaiderTable then
+		RO_RaiderTable = {{}, {}, {}, {}, {}, {}, {}, {}}
 	end
 
     self:Debug("starte locale")
@@ -542,14 +549,18 @@ function RaidOrganizer:OnInitialize() -- {{{
 		end
 	end
     -- standard fuer dropdown setzen
-    UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, current_set[RaidOrganizerDialog.selectedTab], current_set[RaidOrganizerDialog.selectedTab]);
-	self:ShowButtons()	
+    UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab], RO_CurrentSet[RaidOrganizerDialog.selectedTab]);
+	if UnitInRaid('player') then
+		self:ShowButtons()
+	end
     self:LoadCurrentLabels()
 	self:RaidOrganizer_AskSync()
 	self:RefreshRaiderTable()
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
+	
+	RaidOrganizerMinimapButton_OnInitialize()
 end -- }}}
 
 function RaidOrganizer:OnEnable() -- {{{
@@ -572,10 +583,10 @@ function RaidOrganizer:RefreshRaiderTable()
 			end
 		end
 		for i = 1, 9 do
-			if raider[i] then
-				for name in raider[i] do
+			if RO_RaiderTable[i] then
+				for name in RO_RaiderTable[i] do
 					if not listName[name] then
-						raider[i][name] = nil
+						RO_RaiderTable[i][name] = nil
 					end
 				end
 			end
@@ -624,40 +635,40 @@ function RaidOrganizer:RefreshTables() --{{{
 				if engClass == classTab[RaidOrganizerDialog.selectedTab][j] then
 					
                 -- ist ein heiler, aber schon eingeteilt?
-					if raider[RaidOrganizerDialog.selectedTab][unitname] then
+					if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname] then
 						-- schon eingeteilt, nichts machen
-						if not raider[RaidOrganizerDialog.selectedTab][unitname][1] then
+						if not RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] then
 							for k=2,10 do
-								if raider[RaidOrganizerDialog.selectedTab][unitname][k] then
+								if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] then
 									if gruppen[k] >= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
 								-- schon zu viele, mach ihm zum rest
-										raider[RaidOrganizerDialog.selectedTab][unitname][k] = nil
+										RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] = nil
 									else
 										InGroup = 1
 									end
 								end
 							end
 							if InGroup == nil or RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == 1 then
-								raider[RaidOrganizerDialog.selectedTab][unitname][1] = 1
+								RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] = 1
 							end
 						elseif RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == 1 then
 							for k=2,10 do
-								if raider[RaidOrganizerDialog.selectedTab][unitname][k] then
+								if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] then
 									if gruppen[k] >= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
-										raider[RaidOrganizerDialog.selectedTab][unitname][k] = nil
+										RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] = nil
 									end
 								end
 							end
 						end
 					else
-						raider[RaidOrganizerDialog.selectedTab][unitname]={}
+						RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname]={}
 						-- nicht eingeteilt, neu, "rest"
-						raider[RaidOrganizerDialog.selectedTab][unitname][1] = 1
+						RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] = 1
 						position[unitname] = {0,0,0,0,0,0,0,0,0,0}
 					end
 					for k=1,10 do
-						if raider[RaidOrganizerDialog.selectedTab][unitname][k] then
-							self:Debug("Group" ..k-1 .. " : " .. raider[RaidOrganizerDialog.selectedTab][unitname][k])
+						if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] then
+							self:Debug("Group" ..k-1 .. " : " .. RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k])
 							gruppen[k] = gruppen[k] + 1
 						end
 					end
@@ -667,14 +678,14 @@ function RaidOrganizer:RefreshTables() --{{{
 			end
             if not isClassInTab then
                 -- ist kein heiler, nil
-                raider[RaidOrganizerDialog.selectedTab][unitname] = {}
+                RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname] = {}
             end
         end
     end
     self:Debug("stats generiert")
-    self:Debug("raidertabelle aktuallisiert")
+    self:Debug("RO_RaiderTabletabelle aktuallisiert")
 
-    -- raider[...] -> einteilungsarray
+    -- RO_RaiderTable[...] -> einteilungsarray
     -- einteilung resetten
     einteilung = {
         [1] = {},
@@ -688,7 +699,7 @@ function RaidOrganizer:RefreshTables() --{{{
         [9] = {},
 		[10] = {},
     }
-    for name, groupTable in pairs(raider[RaidOrganizerDialog.selectedTab]) do
+    for name, groupTable in pairs(RO_RaiderTable[RaidOrganizerDialog.selectedTab]) do
 		for i=1,10 do
 			if groupTable[i] then
 				--DEFAULT_CHAT_FRAME:AddMessage(i .. " " .. name)
@@ -854,7 +865,7 @@ function RaidOrganizer_SetTab(id)
 
 	RaidOrganizerDialog.selectedTab = id;
 	RaidOrganizerDialogEinteilungTitle:SetText(RaidOrganizer_Tabs[id][1]);
-	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, current_set[id], current_set[id]);
+	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[id], RO_CurrentSet[id]);
 	RaidOrganizer:LoadCurrentLabels()
 	RaidOrganizer:UpdateDialogValues();
 end
@@ -1020,7 +1031,7 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
     end
     -- }}}
     -- MTs {{{
-	-- for name, groupTable in pairs(raider[RaidOrganizerDialog.selectedTab]) do
+	-- for name, groupTable in pairs(RO_RaiderTable[RaidOrganizerDialog.selectedTab]) do
 		-- for i=1,10 do
 			-- if groupTable[i] then
 				-- DEFAULT_CHAT_FRAME:AddMessage(i .. " " .. name)
@@ -1063,15 +1074,15 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
     local function RaidOrganizer_changeSet(set)
         self:Debug("aendern auf :"..set)
         UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, set, set)
-        -- raider temp save
-        tempsetup[current_set[RaidOrganizerDialog.selectedTab]] = {} -- komplett neu bzw. ueberschreiben
-        for name, einteilung in pairs(raider[RaidOrganizerDialog.selectedTab]) do
-			tempsetup[current_set[RaidOrganizerDialog.selectedTab]][name]={}
+        -- RO_RaiderTable temp save
+        tempsetup[RO_CurrentSet[RaidOrganizerDialog.selectedTab]] = {} -- komplett neu bzw. ueberschreiben
+        for name, einteilung in pairs(RO_RaiderTable[RaidOrganizerDialog.selectedTab]) do
+			tempsetup[RO_CurrentSet[RaidOrganizerDialog.selectedTab]][name]={}
             for i = 1, 10 do
-				tempsetup[current_set[RaidOrganizerDialog.selectedTab]][name][i] = einteilung[i]
+				tempsetup[RO_CurrentSet[RaidOrganizerDialog.selectedTab]][name][i] = einteilung[i]
 			end
         end
-        current_set[RaidOrganizerDialog.selectedTab] = set
+        RO_CurrentSet[RaidOrganizerDialog.selectedTab] = set
         self:LoadCurrentLabels()
         self:UpdateDialogValues()
     end
@@ -1104,7 +1115,7 @@ end -- }}}
 function RaidOrganizer:ResetTab() -- {{{
     -- einfach alle heiler löschen und neu bauen
     self:Debug("einteilung resetten") 
-    raider[RaidOrganizerDialog.selectedTab] = {}
+    RO_RaiderTable[RaidOrganizerDialog.selectedTab] = {}
 	einteilung = {}
     self:Debug("slotlabels resetten")
     groupclasses = {}
@@ -1117,7 +1128,7 @@ end -- }}}
 function RaidOrganizer:ResetData() -- {{{
     -- einfach alle heiler löschen und neu bauen
     self:Debug("einteilung resetten") 
-    raider = {{},{},{},{},{},{},{},{},}
+    RO_RaiderTable = {{},{},{},{},{},{},{},{},}
 	einteilung = {}
     self:Debug("slotlabels resetten")
     groupclasses = {}
@@ -1334,24 +1345,24 @@ function RaidOrganizer:RaiderOnDragStop() -- {{{
 						self:Debug("Parent RaidOrganizerDialogEinteilungHealGroup"..group.." und slot: "..slot)
 				end
 				self:Debug("ich habe "..this:GetName())
-				--self:Debug("vorher "..raider[RaidOrganizerDialog.selectedTab][this.username])
+				--self:Debug("vorher "..RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username])
 				-- den heiler da zuordnen
 				if "RaidOrganizerDialogEinteilungRaiderpool" == pool then
-					raider[RaidOrganizerDialog.selectedTab][this.username][1] = 1
+					RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][1] = 1
 					for k=2,10 do
-						raider[RaidOrganizerDialog.selectedTab][this.username][k]=nil
+						RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][k]=nil
 						position[this.username][k] = 0
 					end
 					position[this.username][1] = 0
 				else
 					if group >= 1 and group <= self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] then
-							lastAction["group"] = raider[RaidOrganizerDialog.selectedTab][this.username]
+							lastAction["group"] = RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username]
 							if RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil then
 								for k=1,10 do
-									raider[RaidOrganizerDialog.selectedTab][this.username][k] = nil
+									RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][k] = nil
 								end
 							end
-							raider[RaidOrganizerDialog.selectedTab][this.username][group+1] = 1	
+							RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][group+1] = 1	
 					end
 					if slot >= 1 and slot <= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
 							lastAction["name"] = this.username
@@ -1382,12 +1393,12 @@ function RaidOrganizer:RaiderOnLoad() -- {{{
     -- 2 = passt ;)
     this:SetFrameLevel(this:GetFrameLevel() + 2)
     this:RegisterForDrag("LeftButton")
-	--if not raider or (not table.getn(raider) == 8) then
-		-- raider = {{},{},{},{},{},{},{},{},}
+	--if not RO_RaiderTable or (not table.getn(RO_RaiderTable) == 8) then
+		-- RO_RaiderTable = {{},{},{},{},{},{},{},{},}
 	--end
-	--if not current_set or (not table.getn(current_set) == 8) then
-	--	current_set = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
-		-- raider = {{},{},{},{},{},{},{},{},}
+	--if not RO_CurrentSet or (not table.getn(RO_CurrentSet) == 8) then
+	--	RO_CurrentSet = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
+		-- RO_RaiderTable = {{},{},{},{},{},{},{},{},}
 	--end
 	-- RaidOrganizer:RefreshRaiderTable()
 end -- }}}
@@ -1432,9 +1443,9 @@ function RaidOrganizer:LoadLabelsFromSet(set) -- {{{
         RaidOrganizerDialogEinteilungRestAction:SetText(self.db.account.sets[RaidOrganizerDialog.selectedTab][set].Restaktion)
         if tempsetup[set] then
             -- laden
-            raider = {{},{},{},{},{},{},{},{},} -- reset
+            RO_RaiderTable = {{},{},{},{},{},{},{},{},} -- reset
             for name, einteilung in pairs(tempsetup[set]) do
-                raider[RaidOrganizerDialog.selectedTab][name] = einteilung
+                RO_RaiderTable[RaidOrganizerDialog.selectedTab][name] = einteilung
             end
         end
         return true
@@ -1443,27 +1454,27 @@ function RaidOrganizer:LoadLabelsFromSet(set) -- {{{
 end -- }}}
 
 function RaidOrganizer:LoadCurrentLabels() -- {{{
-    if not self:LoadLabelsFromSet(current_set[RaidOrganizerDialog.selectedTab]) then
+    if not self:LoadLabelsFromSet(RO_CurrentSet[RaidOrganizerDialog.selectedTab]) then
         self:LoadLabelsFromSet(L["SET_DEFAULT"])
     end
 end -- }}}
 
 function RaidOrganizer:SetSave() -- {{{
     self:Debug("set speichern")
-    if current_set[RaidOrganizerDialog.selectedTab] == L["SET_DEFAULT"] then
+    if RO_CurrentSet[RaidOrganizerDialog.selectedTab] == L["SET_DEFAULT"] then
         self:ErrorMessage(L["SET_CANNOT_SAVE_DEFAULT"])
         return
     end
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]].Beschriftungen = {}
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]].Klassengruppen = {}
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Beschriftungen = {}
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Klassengruppen = {}
     for i=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
-        self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]].Beschriftungen[i] = grouplabels[i]
-        self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]].Klassengruppen[i] = {}
+        self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Beschriftungen[i] = grouplabels[i]
+        self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Klassengruppen[i] = {}
         for j=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
-            self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]].Klassengruppen[i][j] = groupclasses[i][j]
+            self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Klassengruppen[i][j] = groupclasses[i][j]
         end
     end
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]].Restaktion = RaidOrganizerDialogEinteilungRestAction:GetText()
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Restaktion = RaidOrganizerDialogEinteilungRestAction:GetText()
 end -- }}}
 
 function RaidOrganizer:SetSaveAs(name) -- {{{
@@ -1504,25 +1515,25 @@ function RaidOrganizer:SetSaveAs(name) -- {{{
         end
     end
     self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Restaktion = RaidOrganizerDialogEinteilungRestAction:GetText()
-    current_set[RaidOrganizerDialog.selectedTab] = name
+    RO_CurrentSet[RaidOrganizerDialog.selectedTab] = name
     self:LoadCurrentLabels()
-    UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, current_set[RaidOrganizerDialog.selectedTab])
+    UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab])
     UIDropDownMenu_Refresh(RaidOrganizerDialogEinteilungSetsDropDown)
     self:UpdateDialogValues()
 end -- }}}
 
 function RaidOrganizer:SetDelete() -- {{{
-    if current_set[RaidOrganizerDialog.selectedTab] == L["SET_DEFAULT"] then
+    if RO_CurrentSet[RaidOrganizerDialog.selectedTab] == L["SET_DEFAULT"] then
         self:ErrorMessage(L["SET_CANNOT_DELETE_DEFAULT"])
         return
     end
     self:Debug("set loeschen")
-    if not self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]] then
+    if not self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]] then
         return
     end
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][current_set[RaidOrganizerDialog.selectedTab]] = nil
-    current_set[RaidOrganizerDialog.selectedTab] = L["SET_DEFAULT"]
-    UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, current_set[RaidOrganizerDialog.selectedTab])
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]] = nil
+    RO_CurrentSet[RaidOrganizerDialog.selectedTab] = L["SET_DEFAULT"]
+    UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab])
     self:LoadCurrentLabels()
     self:UpdateDialogValues()
 end -- }}}
@@ -1616,9 +1627,9 @@ function RaidOrganizer:CHAT_MSG_WHISPER(msg, user) -- {{{
     if msg == "heal" then
         self:Debug("healanfrage")
         local reply = L["REPLY_NO_ARRANGEMENT"]
-        if raider[RaidOrganizerDialog.selectedTab][user] then
+        if RO_RaiderTable[RaidOrganizerDialog.selectedTab][user] then
             -- labels holen
-            reply = string.format(L["REPLY_ARRANGEMENT_FOR"], self:ReplaceTokens(grouplabels[raider[RaidOrganizerDialog.selectedTab][user]]))
+            reply = string.format(L["REPLY_ARRANGEMENT_FOR"], self:ReplaceTokens(grouplabels[RO_RaiderTable[RaidOrganizerDialog.selectedTab][user]]))
         end
         self:Debug("Sende Spieler %s den Text %q", user, reply)
         ChatThrottleLib:SendChatMessage("NORMAL", nil, reply, "WHISPER", nil, user)
@@ -1700,7 +1711,7 @@ end -- }}}
 
 function RaidOrganizer:MultipleArrangementCheckBox_OnClick()
 	if RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil then
-		for name, groupTable in pairs(raider[RaidOrganizerDialog.selectedTab]) do
+		for name, groupTable in pairs(RO_RaiderTable[RaidOrganizerDialog.selectedTab]) do
 			local count = 0
 			for i=2,10 do
 				if groupTable[i] then
@@ -1805,7 +1816,7 @@ function RaidOrganizer:SortGroupClass()
 end
 
 function RaidOrganizer:SetAllRemain()
-	raider[RaidOrganizerDialog.selectedTab] = {}
+	RO_RaiderTable[RaidOrganizerDialog.selectedTab] = {}
 	einteilung = {}
 	self:UpdateDialogValues()
 end
@@ -1830,7 +1841,7 @@ function RaidOrganizer:AutoFill() -- {{{
 		for _, name in pairs(einteilung[1]) do
 			if tableIndex > table.getn(tableGroup) then break end
 			while tableIndex <= progress do
-				raider[RaidOrganizerDialog.selectedTab][name][tableGroup[tableIndex]+1] = 1
+				RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][tableGroup[tableIndex]+1] = 1
 				tableIndex = tableIndex + 1
 				--DEFAULT_CHAT_FRAME:AddMessage(tableIndex .. " " .. progress .. " " .. name)
 			end
@@ -1849,14 +1860,14 @@ function RaidOrganizer:AutoFill() -- {{{
 						self:Debug("ist platz")
 						-- Rest durchlaufen
 						for _, name in pairs(einteilung[1]) do
-							if raider[RaidOrganizerDialog.selectedTab][name][group+1] == nil then
+							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil then
 								-- klasse abfragen
 								local class, engClass = UnitClass(self:GetUnitByName(name))
 								if engClass == groupclasses[group][slot] then
 									-- der spieler passt, einteilen
-									raider[RaidOrganizerDialog.selectedTab][name][group+1] = 1
+									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
 									if not RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() then 
-										raider[RaidOrganizerDialog.selectedTab][name][1] = nil
+										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
 									end
 									-- neu aufbauen (impliziert refresh-tables)
 									self:UpdateDialogValues()
@@ -1876,12 +1887,12 @@ function RaidOrganizer:AutoFill() -- {{{
 			boolCheck = true
 			for group=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
 				for slot=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
-					if raider[RaidOrganizerDialog.selectedTab][name][group+1] == nil and boolCheck then
+					if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil and boolCheck then
 						if groupclasses[group][slot] then
 							if not einteilung[group+1][slot] then
 								local class, engClass = UnitClass(self:GetUnitByName(name))
 								if engClass == groupclasses[group][slot] then
-									raider[RaidOrganizerDialog.selectedTab][name][group+1] = 1
+									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
 									self:UpdateDialogValues()
 									boolCheck = false
 								end
@@ -1929,7 +1940,7 @@ function RaidOrganizer:WriteTooltipText(id)
 	GameTooltip:AddDoubleLine( "________", "____________", 1, 1, 1, 1, 1, 1);
 	local playerNameTable = {}
 	for group=1, self.CONST.NUM_GROUPS[id] do
-		local groupName = self.db.account.sets[id][current_set[id]].Beschriftungen[group]
+		local groupName = self.db.account.sets[id][RO_CurrentSet[id]].Beschriftungen[group]
 		if groupName == "CROSS" then
 			color = {1, 0, 0};
 		elseif groupName == "SQUARE" then
@@ -1947,8 +1958,8 @@ function RaidOrganizer:WriteTooltipText(id)
 		end
 		
 		playerNameTable = {}
-		for nameChar in raider[id] do
-			if raider[id][nameChar][group + 1] then
+		for nameChar in RO_RaiderTable[id] do
+			if RO_RaiderTable[id][nameChar][group + 1] then
 				local _, engClass = UnitClass(self:GetUnitByName(nameChar))
 				if playerNameTable[engClass] == nil then
 					playerNameTable[engClass] = nameChar
@@ -2032,28 +2043,28 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 		length = tonumber(length);
 		
 		if length == 0 then
-			raider[tab_id] = {}; -- message to reset tab
+			RO_RaiderTable[tab_id] = {}; -- message to reset tab
 			return
 		end
 		
 		for i = 1, length do
 			pattern = pattern .. '%s+(%a+)%s+(%d+)';
 		end
-		local raider_table  = {string.find(message, pattern)};
+		local RO_RaiderTable_table  = {string.find(message, pattern)};
 		
 		local charName;
 		local charGroup;
 		local value;
 		for i = 1, length do
-			charName = raider_table[3 + i * 2];
-			if not raider[tab_id][charName] then
-				raider[tab_id][charName] = {};
+			charName = RO_RaiderTable_table[3 + i * 2];
+			if not RO_RaiderTable[tab_id][charName] then
+				RO_RaiderTable[tab_id][charName] = {};
 			end
 			
-			for j = 1, string.len(raider_table[4 + i * 2]) do
-				charGroup = tonumber(string.sub(raider_table[4 + i * 2], j, j));
-				raider[tab_id][charName][charGroup + 1] = 1;
-				raider[tab_id][charName][1] = nil;
+			for j = 1, string.len(RO_RaiderTable_table[4 + i * 2]) do
+				charGroup = tonumber(string.sub(RO_RaiderTable_table[4 + i * 2], j, j));
+				RO_RaiderTable[tab_id][charName][charGroup + 1] = 1;
+				RO_RaiderTable[tab_id][charName][1] = nil;
 			end
 		end
 		if RaidOrganizerDialog:IsShown() then
@@ -2113,11 +2124,11 @@ function RaidOrganizer:RaidOrganizer_SendSync(id)
 	--Reset tab for destination
 	SendAddonMessage("RaidOrganizer", tab_id .. " 0", "RAID")
 	
-	for nameChar in raider[tab_id] do
+	for nameChar in RO_RaiderTable[tab_id] do
 		tmp_msg = "";
 		first = true;
 		for group=1, self.CONST.NUM_GROUPS[tab_id] do
-			if raider[tab_id][nameChar][group + 1] == 1 then
+			if RO_RaiderTable[tab_id][nameChar][group + 1] == 1 then
 				if first then
 					nbPlayers = nbPlayers + 1;
 					tmp_msg = nameChar .. " " .. tostring(group);
@@ -2145,5 +2156,134 @@ function RaidOrganizer:RaidOrganizer_SendSync(id)
 	if not (msg == "") then
 		msg = tostring(tab_id) .. " " .. nbPlayers .. " " .. msg;
 		SendAddonMessage("RaidOrganizer", msg, "RAID")
+	end
+end
+
+function RaidOrganizer_Minimap_OnEnter()
+	GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT");
+	GameTooltip:AddLine("Raid Organizer");
+	GameTooltip:Show();
+end
+
+function RaidOrganizer_Minimap_Position(x,y)
+	if ( x or y ) then
+		if ( x ) then if ( x < 0 ) then x = x + 360; end RaidOrganizerMinimapButton.options.x = x; end
+		if ( y ) then RaidOrganizerMinimapButton.options.y = y; end
+	end
+	x, y = RaidOrganizerMinimapButton.options.x, RaidOrganizerMinimapButton.options.y
+
+	RaidOrganizerMinimapButton:SetPoint("TOPLEFT","Minimap","TOPLEFT",53-((80+(y))*cos(x)),((80+(y))*sin(x))-55);
+end
+
+function RaidOrganizer_Minimap_DragStart()
+	if RaidOrganizerMinimapButton.options.lockminimap == true then 
+		return 
+	end
+	this:SetScript("OnUpdate", RaidOrganizer_Minimap_DragUpdate);
+end
+function RaidOrganizer_Minimap_DragStop()
+	RaidOrganizerMinimapButton:UnlockHighlight()
+	this:SetScript("OnUpdate", nil);
+end
+function RaidOrganizer_Minimap_DragUpdate()
+	-- Thanks to Gello for making this a ton shorter
+	RaidOrganizerMinimapButton:LockHighlight();
+	local curX, curY = GetCursorPosition();
+	local mapX, mapY = Minimap:GetCenter();
+	local x, y;
+	if ( IsShiftKeyDown() ) then
+		y = math.pow( math.pow(curY - mapY * Minimap:GetEffectiveScale(), 2) + math.pow(mapX * Minimap:GetEffectiveScale() - curX, 2), 0.5) - 70;
+		y = min( max( y, -30 ), 30 );
+	end
+	x = math.deg(math.atan2( curY - mapY * Minimap:GetEffectiveScale(), mapX * Minimap:GetEffectiveScale() - curX ));
+
+	RaidOrganizer_Minimap_Position(x,y);
+end
+
+function RaidOrganizer_Minimap_Update()
+	if ( RaidOrganizerMinimapButton.options.hideminimap ) then
+		RaidOrganizerMinimapButton:Hide();
+	else
+		RaidOrganizerMinimapButton:Show();
+		RaidOrganizer_Minimap_Position();
+	end
+end
+
+function RaidOrganizer_Minimap_OnClick(arg1)
+	if arg1 == "LeftButton" then
+		RaidOrganizer:ShowButtons()
+	else
+		dewdrop:Open(RaidOrganizerMinimapButton)
+	end
+end
+
+function RaidOrganizerMinimapButton_OnInitialize()
+	dewdrop:Register(RaidOrganizerMinimapButton, 'dontHook', true, 'children', function(level, value) CreateDewDropMenu(level, value) end)
+	
+	RaidOrganizerMinimapButton:SetNormalTexture("Interface\\Icons\\Spell_Nature_Polymorph_Cow")
+	RaidOrganizerMinimapButton:SetPushedTexture("Interface\\Icons\\Spell_Nature_Polymorph_Cow")
+	if RaidOrganizerMinimapButton.options == nil then
+		RaidOrganizerMinimapButton.options = {}
+	end
+	if RaidOrganizerMinimapButton.options.x == nil or RaidOrganizerMinimapButton.options.y == nil then
+		RaidOrganizerMinimapButton.options.x = 0
+		RaidOrganizerMinimapButton.options.y = 0
+	end
+	
+	if RaidOrganizerMinimapButton.options.lockminimap == nil then
+		RaidOrganizerMinimapButton.options.lockminimap = false
+	end
+	
+	if RaidOrganizerMinimapButton.options.hideminimap == nil then
+		RaidOrganizerMinimapButton.options.hideminimap = false
+	end
+	if not RaidOrganizerMinimapButton.options.hideminimap then
+		RaidOrganizerMinimapButton:Show()
+	end
+end
+
+function CreateDewDropMenu(level, value)
+	-- Create drewdrop menu
+    if level == 1 then
+        dewdrop:AddLine( 'text', "RaidOrganizer Options", 'isTitle', true )
+        dewdrop:AddLine( 'text', 'Show Buttons',
+						 'checked', RaidOrganizerButtonsHorizontal:IsShown() or RaidOrganizerButtonsVertical:IsShown(),
+						 'func', function() RaidOrganizer:ShowButtons(); end,
+            			 'tooltipTitle', 'Show Buttons',
+            			 'tooltipText', 'Click to show buttons'
+            		     )
+        dewdrop:AddLine( 'text', 'Horizontal Display',
+						 'checked', RaidOrganizer.db.char.horizontal,
+                         'func', function()
+                            RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons();
+                         end,
+                         'tooltipTitle', 'Horizontal Display',
+            			 'tooltipText', 'Check to display button horizontally, uncheck otherwise'
+                         )
+		dewdrop:AddLine( 'text', 'Minimap Button options',
+						 'hasArrow', true,
+            			 'value', "minimapOptions",
+                         'tooltipTitle', 'Minimap Button options',
+            			 'tooltipText', 'Show/hide and lock/unlock minimap button'
+                         )
+	elseif level == 2 then    
+        if value == "minimapOptions" then
+			dewdrop:AddLine( 'text', 'Lock minimap button',
+						 'checked', RaidOrganizerMinimapButton.options.lockminimap,
+                         'func', function()
+                            RaidOrganizerMinimapButton.options.lockminimap = not RaidOrganizerMinimapButton.options.lockminimap;
+                         end,
+                         'tooltipTitle', 'Lock minimap button',
+            			 'tooltipText', 'Check to lock minimap button'
+                         )
+			dewdrop:AddLine( 'text', 'Hide minimap button',
+						 'checked', RaidOrganizerMinimapButton.options.hideminimap,
+                         'func', function()
+                            RaidOrganizerMinimapButton.options.hideminimap = not RaidOrganizerMinimapButton.options.hideminimap; if RaidOrganizerMinimapButton.options.hideminimap then RaidOrganizerMinimapButton:Hide(); end
+                         end,
+                         'tooltipTitle', 'Hide minimap button',
+            			 'tooltipText', 'Check to hide minimap button'
+                         )
+		end
 	end
 end

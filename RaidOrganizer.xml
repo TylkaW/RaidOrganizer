@@ -1636,5 +1636,82 @@
             <!-- }}} -->
         </Frames>
     </Frame>
+	<Button name="RaidOrganizerMinimapButton" parent="Minimap" enableMouse="true" hidden="true" frameStrata="MEDIUM">
+		<Size>
+			<AbsDimension x="32" y="32"/>
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER" relativeTo="Minimap" relativePoint="LEFT">
+				<Offset>
+					<AbsDimension x="0" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<NormalTexture file="Interface\\Icons\\Spell_Nature_Polymorph_Cow">
+			<Size>
+				<AbsDimension x="20" y="20"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="-1" y="1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</NormalTexture>
+		<PushedTexture file="Interface\\Icons\\Spell_Nature_Polymorph_Cow">
+			<Size>
+				<AbsDimension x="20" y="20"/>
+			</Size>
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</PushedTexture>
+		<HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight"/>
+		<Layers>
+			<Layer level="OVERLAY">
+				<Texture name="$parentFrame" file="Interface\Minimap\MiniMap-TrackingBorder">
+					<Size>
+						<AbsDimension x="52" y="52"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnClick>
+				RaidOrganizer_Minimap_OnClick(arg1);
+			</OnClick>
+			<OnEnter>
+				RaidOrganizer_Minimap_OnEnter();
+			</OnEnter>
+			<OnLoad>
+				this:RegisterForClicks("LeftButtonUp", "RightButtonUp");
+				this:RegisterForDrag("LeftButton");
+			</OnLoad>
+			<OnLeave>
+				GameTooltip:Hide();
+			</OnLeave>
+			<OnDragStart>
+				RaidOrganizer_Minimap_DragStart();
+			</OnDragStart>
+			<OnDragStop>
+				RaidOrganizer_Minimap_DragStop();
+			</OnDragStop>
+			<OnMouseUp>
+				RaidOrganizer_Minimap_DragStop();
+			</OnMouseUp>
+		</Scripts>
+	</Button>
     <!-- }}} -->
 </Ui>
