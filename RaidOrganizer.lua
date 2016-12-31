@@ -10,6 +10,12 @@ local options = {
             desc = L["SHOW_DIALOG"],
             func = function() RaidOrganizer:ShowButtons() end,
         },
+		showDialog = {
+            type = 'execute',
+            name = 'Show/Hide Dialog',
+            desc = L["SHOW_DIALOG"],
+            func = function() RaidOrganizer:Dialog() end,
+        },
         autosort = {
             type = 'toggle',
             name = 'Autosort',
@@ -39,20 +45,27 @@ local options = {
 			step = 0.01,
 			order = 2
 		},
-		showMinimap = {
-			type = 'toggle',
-			name = 'Toggle Minimap icon',
-			desc = 'Show/Hide Minimap icon',
-			get = function() return RaidOrganizer.db.char.showMinimap end,
-            set = function() RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end end,
-		},
-		lockMinimap = {
-			type = 'toggle',
-			name = 'Lock Minimap',
-			desc = 'Lock Minimap button',
-			get = function() return RaidOrganizer.db.char.lockMinimap end,
-            set = function() RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap end,
-		},
+		minimap = {
+			type = "group",
+			name = 'Minimap Button options',
+			desc = 'Minimap Button options',
+			args = {
+				showMinimap = {
+					type = 'toggle',
+					name = 'Toggle Minimap icon',
+					desc = 'Show/Hide Minimap icon',
+					get = function() return RaidOrganizer.db.char.showMinimap end,
+					set = function() RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end end,
+				},
+				lockMinimap = {
+					type = 'toggle',
+					name = 'Lock Minimap',
+					desc = 'Lock Minimap button',
+					get = function() return RaidOrganizer.db.char.lockMinimap end,
+					set = function() RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap end,
+				},
+			}
+		}
    }
 }
 -- units
@@ -2254,6 +2267,7 @@ function RaidOrganizer_Minimap_OnClick(arg1)
 end
 
 function RaidOrganizerMinimapButton_OnInitialize()
+	--dewdrop:Register(RaidOrganizerMinimapButton, 'children', RaidOrganizer.options)
 	dewdrop:Register(RaidOrganizerMinimapButton, 'dontHook', true, 'children', function(level, value) CreateDewDropMenu(level, value) end)
 	
 	RaidOrganizerMinimapButton:SetNormalTexture("Interface\\Icons\\Spell_Nature_Polymorph_Cow")
