@@ -2269,8 +2269,13 @@ function RaidOrganizer_Minimap_OnEnter()
 						tmpcolor = {0,1,0}
 					end
 				else
-					tmpstr = UnitName("raid"..i) .. " N/A";
-					tmpcolor = {1,0,0}
+					if UnitIsConnected("raid"..i) then
+						tmpstr = UnitName("raid"..i) .. " N/A";
+						tmpcolor = {1,0,0}
+					else
+						tmpstr = UnitName("raid"..i) .. " offline";
+						tmpcolor = {0.5,0.5,0.5}
+					end
 				end
 				if str1 == "" then str1 = tmpstr; color1 = tmpcolor; else str2 = tmpstr; color2 = tmpcolor end
 				if str2 ~= "" then GameTooltip:AddDoubleLine(str1, str2, color1[1], color1[2], color1[3], color2[1], color2[2], color2[3]); str1 = ""; str2 = ""; end
