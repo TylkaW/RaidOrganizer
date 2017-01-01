@@ -65,8 +65,15 @@ local options = {
 					set = function() RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap end,
 				},
 			}
-		}
-   }
+		},
+		versionQuery = {
+			type = "toggle",
+			name = 'Version Query',
+			desc = 'Query raid member RaidOrganizer version',
+			get = function() return b_versionQuery end,
+			set = function() b_versionQuery = not b_versionQuery; if b_versionQuery then if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to query version"); end end end,
+		},
+    }
 }
 -- units
 
@@ -444,6 +451,8 @@ RaidOrganizer.CONST = {}
 RaidOrganizer.CONST.NUM_GROUPS = { 6, 8, 8, 8, 6, 8, 8, 8}
 RaidOrganizer.CONST.NUM_SLOTS = { 8, 3, 5, 2, 1, 1, 1, 1}
 
+RaidOrganizer.b_versionQuery = false
+RaidOrganizer.RO_version_table = {}
 --RaidOrganizer.CONST.NUM_GROUPS = { 9, 9, 9, 9, 9, 9, 9, 9}
 --RaidOrganizer.CONST.NUM_SLOTS = { 4, 4, 4, 4, 4, 4, 4, 4}
 
@@ -508,7 +517,7 @@ function RaidOrganizer:OnInitialize() -- {{{
         hideOnEscape = 1,
         hasEditBox = 1,
     }; --}}}
-
+	
 	if not RO_CurrentSet then
 		RO_CurrentSet = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
 	end
@@ -602,7 +611,10 @@ function RaidOrganizer:OnInitialize() -- {{{
 		self:UpdateDialogValues()
 	end
 	
+	if not self.version then self.version = GetAddOnMetadata("RaidOrganizer", "Version") end
+	RaidOrganizer.RO_version_table = {}
 	RaidOrganizerMinimapButton_OnInitialize()
+
 end -- }}}
 
 function RaidOrganizer:OnEnable() -- {{{
@@ -2054,19 +2066,30 @@ function RaidOrganizer:RAID_ROSTER_UPDATE()
 end
 
 function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
-	ChatFrame6:AddMessage(sender .. " : " .. prefix .. " -- " .. message)
-	if (prefix ~= "RaidOrganizer" or type ~= "RAID") then return end
+	--ChatFrame6:AddMessage(sender .. " : " .. prefix .. " -- " .. message)
+	
+	if (prefix == "ROVersion") then 
+		if b_versionQuery then
+			self.RO_version_table[sender] = message
+		end
+	end
+	
+	if (prefix ~= "RaidOrganizer") then return end
 
+	if (type ~= "RAID") then return end
 	if UnitInRaid('player') then
 		local _, _, askPattern, tab_id = string.find(message, '(%a+)%s+(%d+)');
 		if (askPattern == "ONLOAD") then
 			if sender == UnitName('player') then
 				return
-			elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked()) then
+			elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
 				for tab = 1, 8 do
 					RaidOrganizer:RaidOrganizer_SendSync(tab);
 				end
 			end
+			return
+		elseif (askPattern == "VQUERY") then
+			SendAddonMessage("ROVersion", tostring(self.version), 'RAID', sender)
 			return
 		end
 		for i = 1, GetNumRaidMembers() do
@@ -2153,6 +2176,11 @@ function RaidOrganizer:RaidOrganizer_AskSync()
 	SendAddonMessage("RaidOrganizer", "ONLOAD 0", "RAID")
 end
 
+function RaidOrganizer:RaidOrganizer_VersionQuery()
+	self.RO_version_table = {}
+	SendAddonMessage("RaidOrganizer", "VQUERY 0", "RAID")
+end
+
 function RaidOrganizer:RaidOrganizer_SendSync(id)
 	local msg = "";
 	local tmp_msg = "";
@@ -2207,10 +2235,49 @@ end
 
 function RaidOrganizer_Minimap_OnEnter()
 	GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT");
-	GameTooltip:AddLine("Raid Organizer");
+	GameTooltip:AddLine("Raid Organizer " .. RaidOrganizer.version);
 	GameTooltip:AddLine("Left click to show/hide bar", 0,1,0);
 	GameTooltip:AddLine("Right click to show options", 0,1,0);
 	GameTooltip:AddLine("Left click and drag to move", 0,1,0);
+	local str1, str2 = "", "";
+	local color1, color2 = {1,1,1}, {1,1,1};
+	local tmpstr = "";
+	local tmpcolor = {1,1,1}
+	if (IsRaidLeader() or IsRaidOfficer()) and b_versionQuery then
+		GameTooltip:AddLine(" ", 0,0,0);
+		GameTooltip:AddLine("Version Query :");
+		local charName = ""
+		local charVersion = ""
+		for i=1, MAX_RAID_MEMBERS do
+			charName = ""
+			charVersion = ""
+			if UnitExists("raid"..i) then
+				for key,value in pairs(RaidOrganizer.RO_version_table) do
+					if key == UnitName("raid"..i) then
+						charName = key
+						charVersion = value
+						break
+					end
+				end
+				if charName ~= "" then
+					tmpstr = charName .. " " .. charVersion;
+					if charVersion == RaidOrganizer.version then
+						tmpcolor = {1,1,1}
+					elseif charVersion < RaidOrganizer.version then
+						tmpcolor = {1,0.5,0}
+					else
+						tmpcolor = {0,1,0}
+					end
+				else
+					tmpstr = UnitName("raid"..i) .. " N/A";
+					tmpcolor = {1,0,0}
+				end
+				if str1 == "" then str1 = tmpstr; color1 = tmpcolor; else str2 = tmpstr; color2 = tmpcolor end
+				if str2 ~= "" then GameTooltip:AddDoubleLine(str1, str2, color1[1], color1[2], color1[3], color2[1], color2[2], color2[3]); str1 = ""; str2 = ""; end
+			end
+		end
+		if str1 ~= "" then GameTooltip:AddDoubleLine(str1, "", color1[1], color1[2], color1[3], color2[1], color2[2], color2[3]); str1 = ""; str2 = ""; end
+	end
 	GameTooltip:Show();
 end
 
@@ -2294,7 +2361,7 @@ end
 function CreateDewDropMenu(level, value)
 	-- Create drewdrop menu
     if level == 1 then
-        dewdrop:AddLine( 'text', "RaidOrganizer Options", 'isTitle', true )
+        dewdrop:AddLine( 'text', "RaidOrganizer", 'isTitle', true )
         dewdrop:AddLine( 'text', 'Show Buttons',
 						 'func', function() RaidOrganizer:ShowButtons(); end,
             			 'tooltipTitle', 'Show Buttons',
@@ -2334,6 +2401,12 @@ function CreateDewDropMenu(level, value)
                          'tooltipTitle', 'Minimap Button options',
             			 'tooltipText', 'Show/hide and lock/unlock minimap button'
                          )
+		dewdrop:AddLine( 'text', 'Version Query',
+						 'checked', b_versionQuery,
+						 'func', function() b_versionQuery = not b_versionQuery; if b_versionQuery then if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to query version"); end end end,
+						 'tooltipTitle', 'Version Query',
+						 'tooltipText', 'Ask raid member for their RaidOrganizer version'
+						 )
 	elseif level == 2 then    
         if value == "minimapOptions" then
 			dewdrop:AddLine( 'text', 'Lock minimap button',
