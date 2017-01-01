@@ -62,7 +62,7 @@ AceLocale:RegisterTranslation("RaidOrganizer", "deDE", function()
         ["REPLY_NO_ARRANGEMENT"] = "Du bist f\195\188 nichts eingeteilt worden",
         ["REPLY_ARRANGEMENT_FOR"] = "Du bist f\195\188r %s eingeteilt",
         ["AUTOFILL"] = "Autofill",
-        ["MSG_HEAL_FOR_ARRANGEMENT"] = "Fl\195\188stert 'heal' f\195\188r deine Heilereinteilung.",
+        ["MSG_HEAL_FOR_ARRANGEMENT"] = "Fl\195\188stert 'assign' f\195\188r deine Heilereinteilung.",
         ["WHISPER"] = "Einteilungen fl\195\188stern",
         ["ARRANGEMENT_FOR"] = "Du bist f\195\188r folgendes eingeteilt: %s",
     }

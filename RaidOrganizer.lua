@@ -1678,7 +1678,7 @@ function RaidOrganizer:CHAT_MSG_WHISPER(msg, user) -- {{{
         return
     end
     self:Debug("Der Spieler "..user.." schrieb: "..msg)
-    if msg == "heal" then
+    if msg == "assign" then
         self:Debug("healanfrage")
         local reply = L["REPLY_NO_ARRANGEMENT"]
         if RO_RaiderTable[RaidOrganizerDialog.selectedTab][user] then

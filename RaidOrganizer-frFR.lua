@@ -63,7 +63,7 @@ AceLocale:RegisterTranslation("RaidOrganizer", "frFR", function()
         ["REPLY_NO_ARRANGEMENT"] = "You are not assigned ",
         ["REPLY_ARRANGEMENT_FOR"] = "You are assigned to %s",
         ["AUTOFILL"] = "Autofill",
-        ["MSG_HEAL_FOR_ARRANGEMENT"] = "Whisper 'heal' for your assignment.",
+        ["MSG_HEAL_FOR_ARRANGEMENT"] = "Whisper 'assign' for your assignment.",
         ["WHISPER"] = "Whisper",
         ["ARRANGEMENT_FOR"] = "Your arrangement: %s",
     }
