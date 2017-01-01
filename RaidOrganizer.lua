@@ -523,6 +523,8 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
 	if not RO_RaiderTable then
 		RO_RaiderTable = {{}, {}, {}, {}, {}, {}, {}, {}}
+	else
+		self:RefreshRaiderTable()
 	end
 
     self:Debug("starte locale")
@@ -606,7 +608,6 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
     self:LoadCurrentLabels()
 	self:RaidOrganizer_AskSync()
-	self:RefreshRaiderTable()
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
@@ -2019,13 +2020,15 @@ function RaidOrganizer:WriteTooltipText(id)
 		for nameChar in RO_RaiderTable[id] do
 			if RO_RaiderTable[id][nameChar][group + 1] then
 				local _, engClass = UnitClass(self:GetUnitByName(nameChar))
-				if playerNameTable[engClass] == nil then
-					playerNameTable[engClass] = nameChar
-				else
-					playerNameTable[engClass] = playerNameTable[engClass] .. ", " .. nameChar
-				end
-				if UnitName('player') == nameChar then
-					playerNameTable[engClass] = "---> " .. playerNameTable[engClass]
+				if not engClass then
+					if playerNameTable[engClass] == nil then
+						playerNameTable[engClass] = nameChar
+					else
+						playerNameTable[engClass] = playerNameTable[engClass] .. ", " .. nameChar
+					end
+					if UnitName('player') == nameChar then
+						playerNameTable[engClass] = "---> " .. playerNameTable[engClass]
+					end
 				end
 			end
 		end
