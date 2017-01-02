@@ -801,8 +801,9 @@ function RaidOrganizer:RefreshTables() --{{{
 						RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname]={}
 						-- nicht eingeteilt, neu, "rest"
 						RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] = 1
-						position[unitname] = {0,0,0,0,0,0,0,0,0,0}
+						--position[unitname] = {0,0,0,0,0,0,0,0,0,0}
 					end
+					position[unitname] = {0,0,0,0,0,0,0,0,0,0}
 					for k=1,10 do
 						if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] then
 							self:Debug("Group" ..k-1 .. " : " .. RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k])
@@ -1024,7 +1025,6 @@ end -- }}}
 
 function RaidOrganizer:UpdateDialogValues() -- {{{
     self:RefreshTables()
-	
 	local function resizeLayout(size, moreRemain)
 
 		for grp = 1,  9 do
@@ -1211,7 +1211,11 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
             local buttonlabel = getglobal(button:GetName().."Label")
             local buttoncolor = getglobal(button:GetName().."Color")
             -- habe den Button an sich, das Label und die Farbe, einstellen
-            buttonlabel:SetText(einteilung[j+1][i])
+			if RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:GetChecked() == 1 then
+				buttonlabel:SetText(einteilung[j+1][i] .. "(" .. groupByName[einteilung[j+1][i]] .. ")")
+			else
+				buttonlabel:SetText(einteilung[j+1][i])
+			end
             local class, engClass = UnitClass(self:GetUnitByName(einteilung[j+1][i]))
             local color = RAID_CLASS_COLORS[engClass];
             if color then
@@ -1886,6 +1890,54 @@ function RaidOrganizer:SortGroupClass()
 			if b == "PALADIN" then -- (Paladin, *)
 					return false
 			end
+			if a == "Group1" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group1" then -- (Paladin, *)
+					return false
+			end
+			if a == "Group2" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group2" then -- (Paladin, *)
+					return false
+			end
+			if a == "Group3" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group3" then -- (Paladin, *)
+					return false
+			end
+			if a == "Group4" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group4" then -- (Paladin, *)
+					return false
+			end
+			if a == "Group5" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group5" then -- (Paladin, *)
+					return false
+			end
+			if a == "Group6" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group6" then -- (Paladin, *)
+					return false
+			end
+			if a == "Group7" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group7" then -- (Paladin, *)
+					return false
+			end
+			if a == "Group8" then -- (Paladin, *)
+					return true
+			end
+			if b == "Group8" then -- (Paladin, *)
+					return false
+			end
 			if a == "EMPTY" then -- (Paladin, *)
 					return true
 			end
@@ -1964,13 +2016,19 @@ function RaidOrganizer:AutoFill() -- {{{
 								if engClass == groupclasses[group][slot] then
 									-- der spieler passt, einteilen
 									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
-									if not RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() then 
-										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
-									end
+									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
 									-- neu aufbauen (impliziert refresh-tables)
 									self:UpdateDialogValues()
 									break; -- naechster durchlauf
-								else
+								elseif string.find(groupclasses[group][slot], "Group") then
+									local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
+									--DEFAULT_CHAT_FRAME:AddMessage(grpIdx .. " " .. groupByName[name])
+									if tonumber(grpIdx) == groupByName[name] then
+										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
+										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
+										self:UpdateDialogValues()
+										break;
+									end
 									-- der spieler passt nicht, naechster
 								end
 							end
@@ -1993,6 +2051,16 @@ function RaidOrganizer:AutoFill() -- {{{
 									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
 									self:UpdateDialogValues()
 									boolCheck = false
+								elseif string.find(groupclasses[group][slot], "Group") then
+									local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
+									--DEFAULT_CHAT_FRAME:AddMessage(grpIdx .. " " .. groupByName[name])
+									if tonumber(grpIdx) == groupByName[name] then
+										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
+										self:UpdateDialogValues()
+										boolCheck = false
+										break;
+									end
+									-- der spieler passt nicht, naechster
 								end
 							end
 						end
@@ -2099,10 +2167,10 @@ end
 ------------------------------
 function RaidOrganizer:RAID_ROSTER_UPDATE()
 	self:RefreshRaiderTable()
+	if RaidOrganizerDialog:IsShown() then
+		self:UpdateDialogValues()
+	end
 	if (RaidOrganizerDialogBroadcastAutoSync:GetChecked()) then
-		if RaidOrganizerDialog:IsShown() then
-			self:UpdateDialogValues()
-		end
 		for tab = 1, 9 do
 			RaidOrganizer:RaidOrganizer_SendSync(tab);
 		end
