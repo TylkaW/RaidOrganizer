@@ -1377,12 +1377,12 @@
                     </Frame> <!-- }}} -->
 					<Frame name="$parentOptionen" inherits="OptionFrameBoxTemplate"> <!-- {{{ -->
                         <Size>
-                            <AbsDimension x="150" y="75" />
+                            <AbsDimension x="130" y="100" />
                         </Size>
                         <Anchors>
-                            <Anchor point="BOTTOMLEFT" relativeTo="$parentRaiderpool" relativePoint="BOTTOMRIGHT">
+                            <Anchor point="BOTTOMRIGHT" relativeTo="$parentStats" relativePoint="BOTTOMLEFT">
                                 <Offset>
-                                    <AbsDimension x="5" y="0"/>
+                                    <AbsDimension x="-5" y="0"/>
                                 </Offset>
                             </Anchor>
                         </Anchors>
@@ -1401,7 +1401,7 @@
                                 </Scripts>
                             </Button>
 							<CheckButton name="$parentMultipleArrangementCheckBox" inherits="UICheckButtonTemplate" text="MULT_ARR_LOCALE">
-                                <Size x="20" y="20"/>
+                                <Size x="18" y="18"/>
                                 <Anchors>
                                     <Anchor point="TOPLEFT" relativeTo="$parentAutofill" relativePoint="BOTTOMLEFT">
                                         <Offset x="0" y="-5"/>
@@ -1410,6 +1410,19 @@
 								<Scripts>
                                     <OnClick>
 										RaidOrganizer:MultipleArrangementCheckBox_OnClick()	
+                                    </OnClick>
+                                </Scripts>
+                            </CheckButton>
+							<CheckButton name="$parentDisplayGroupNb" inherits="UICheckButtonTemplate" text="DisplayGroup_LOCALE">
+                                <Size x="18" y="18"/>
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeTo="$parentMultipleArrangementCheckBox" relativePoint="BOTTOMLEFT">
+                                        <Offset x="0" y="-5"/>
+                                    </Anchor>
+                                </Anchors>
+								<Scripts>
+                                    <OnClick>
+										RaidOrganizer:DisplayGroupNbCheckBox_OnClick()	
                                     </OnClick>
                                 </Scripts>
                             </CheckButton>
@@ -1496,9 +1509,18 @@
 							</Anchor>
 						</Anchors>
 					</CheckButton>
+					<CheckButton name="RaidOrganizer_Tab10" inherits="RaidOrganizer_TabTemplate" id="10">
+						<Anchors>
+							<Anchor point="TOPLEFT" relativeTo="RaidOrganizer_Tab9" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="0" y="-17"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</CheckButton>
                     <EditBox name="$parentRestAction" letters="40" autoFocus="false">
                         <Size>
-                            <AbsDimension x="200" y="32"/>
+                            <AbsDimension x="100" y="32"/>
                         </Size>
                         <Anchors>
                             <Anchor point="LEFT" relativeTo="$parentRest" relativePoint="RIGHT">
@@ -1511,7 +1533,7 @@
                             <Layer level="BACKGROUND">
                                     <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Left">
                                             <Size>
-                                                    <AbsDimension x="155" y="32"/>
+                                                    <AbsDimension x="100" y="32"/>
                                             </Size>
                                             <Anchors>
                                                 <Anchor point="LEFT">
@@ -1521,7 +1543,7 @@
                                     </Texture>
                                     <Texture file="Interface\ChatFrame\UI-ChatInputBorder-Right">
                                             <Size>
-                                                    <AbsDimension x="150" y="32"/>
+                                                    <AbsDimension x="100" y="32"/>
                                             </Size>
                                             <Anchors>
                                                     <Anchor point="RIGHT"/>
