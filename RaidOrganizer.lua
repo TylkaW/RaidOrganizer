@@ -466,15 +466,15 @@ RaidOrganizer:RegisterDefaults('account', {
             },
             Restaktion = "",
             Klassengruppen = {
-                [1] = {""},
-                [2] = {""},
-                [3] = {""},
-                [4] = {""},
-                [5] = {""},
-                [6] = {""},
-                [7] = {""},
-                [8] = {""},
-				[9] = {""},
+                [1] = {},
+                [2] = {},
+                [3] = {},
+                [4] = {},
+                [5] = {},
+                [6] = {},
+                [7] = {},
+                [8] = {},
+				[9] = {},
             }
         },
     },
@@ -494,15 +494,15 @@ RaidOrganizer:RegisterDefaults('account', {
             },
             Restaktion = "",
             Klassengruppen = {
-                [1] = {""},
-                [2] = {""},
-                [3] = {""},
-                [4] = {""},
-                [5] = {""},
-                [6] = {""},
-                [7] = {""},
-                [8] = {""},
-				[9] = {""},
+                [1] = {},
+                [2] = {},
+                [3] = {},
+                [4] = {},
+                [5] = {},
+                [6] = {},
+                [7] = {},
+                [8] = {},
+				[9] = {},
             }
         },
 	}
@@ -1741,7 +1741,6 @@ function RaidOrganizer:OnMouseWheel(richtung) -- {{{
 		end
 	end
 	table.insert(classdirection,1,"EMPTY");
-
     -- position im array suchen
     local pos = 1
     while (pos <= table.getn(classdirection)) do
