@@ -151,7 +151,8 @@ if faction == "Alliance" then
 	{"WARLOCK"},
 	{"MAGE"},
 	{"PRIEST"},
-	{"DRUID"}}
+	{"DRUID"},
+	{"MAGE","PRIEST","WARLOCK","ROGUE","HUNTER", "DRUID", "PALADIN", "WARRIOR"}}
 else
 	classTab = {{"PRIEST","DRUID","SHAMAN"},
 	{"WARRIOR","DRUID"},
@@ -160,7 +161,8 @@ else
 	{"WARLOCK"},
 	{"MAGE"},
 	{"PRIEST"},
-	{"DRUID"}}
+	{"DRUID"},
+	{"MAGE","PRIEST","WARLOCK","ROGUE","HUNTER", "DRUID", "SHAMAN", "WARRIOR"}}
 end
 		
 local change_id = 0
@@ -444,17 +446,43 @@ RaidOrganizer:RegisterDefaults('account', {
             }
         },
     },
+	{
+        [L["SET_DEFAULT"]] = {
+            Name = L["SET_DEFAULT"],
+            Beschriftungen = {
+                [1] = "Left",
+                [2] = "Right",
+                [3] = "",
+                [4] = "",
+                [5] = "",
+                [6] = "",
+                [7] = "",
+                [8] = "",
+				[9] = "",
+            },
+            Restaktion = "",
+            Klassengruppen = {
+                [1] = {""},
+                [2] = {""},
+                [3] = {""},
+                [4] = {""},
+                [5] = {""},
+                [6] = {""},
+                [7] = {""},
+                [8] = {""},
+				[9] = {""},
+            }
+        },
+    },
 	}
 })
 
 RaidOrganizer.CONST = {}
-RaidOrganizer.CONST.NUM_GROUPS = { 6, 8, 8, 8, 6, 8, 8, 8}
-RaidOrganizer.CONST.NUM_SLOTS = { 8, 3, 5, 2, 1, 1, 1, 1}
+RaidOrganizer.CONST.NUM_GROUPS = { 6, 8, 8, 8, 6, 8, 8, 8, 2}
+RaidOrganizer.CONST.NUM_SLOTS = { 8, 3, 5, 2, 1, 1, 1, 1, 30}
 
 RaidOrganizer.b_versionQuery = false
 RaidOrganizer.RO_version_table = {}
---RaidOrganizer.CONST.NUM_GROUPS = { 9, 9, 9, 9, 9, 9, 9, 9}
---RaidOrganizer.CONST.NUM_SLOTS = { 4, 4, 4, 4, 4, 4, 4, 4}
 
 function RaidOrganizer:OnInitialize() -- {{{
     -- Called when the addon is loaded
@@ -519,12 +547,23 @@ function RaidOrganizer:OnInitialize() -- {{{
     }; --}}}
 	
 	if not RO_CurrentSet then
-		RO_CurrentSet = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
+		RO_CurrentSet = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
 	end
 	if not RO_RaiderTable then
-		RO_RaiderTable = {{}, {}, {}, {}, {}, {}, {}, {}}
+		RO_RaiderTable = {{}, {}, {}, {}, {}, {}, {}, {}, {}}
 	else
 		self:RefreshRaiderTable()
+	end
+	for i = 1, 9 do
+		if RO_RaiderTable[i] == nil then
+			RO_RaiderTable[i] = {}
+		end
+		if self.db.account.sets[i] == nil then
+			self.db.account.sets[i] = {}
+		end
+		if RO_CurrentSet[i] == nil then
+			RO_CurrentSet[i] = L["SET_DEFAULT"]
+		end
 	end
 
     self:Debug("starte locale")
@@ -575,9 +614,10 @@ function RaidOrganizer:OnInitialize() -- {{{
 			{ "Intel Buff", "Interface\\Icons\\spell_holy_magicalsentry" },
 			{ "Stam Buff", "Interface\\Icons\\spell_holy_wordfortitude" },
 			{ "MOTW Buff", "Interface\\Icons\\spell_nature_regeneration" },
+			{ "Placement", "Interface\\Icons\\Ability_hunter_pathfinding"}
 		};
 		
-	for i = 1, 8, 1 do
+	for i = 1, 9, 1 do
 		getglobal("RaidOrganizer_Tab" .. i).tooltiptext = RaidOrganizer_Tabs[i][1];
 		getglobal("RaidOrganizer_Tab" .. i):SetNormalTexture(RaidOrganizer_Tabs[i][2]);
 		getglobal("RaidOrganizer_Tab" .. i):Show();
@@ -594,7 +634,7 @@ function RaidOrganizer:OnInitialize() -- {{{
 		if grp > RaidOrganizer.CONST.NUM_GROUPS[1] then
 			getglobal("RaidOrganizerDialogEinteilungHealGroup" .. grp):Hide();
 		end
-		for slot = RaidOrganizer.CONST.NUM_SLOTS[1], 10 do
+		for slot = RaidOrganizer.CONST.NUM_SLOTS[1], 30 do
 			getglobal("RaidOrganizerDialogEinteilungHealGroup" .. grp .. "Slot" .. slot):Hide();
 		end
 	end
@@ -912,7 +952,7 @@ end
 
 function RaidOrganizer_SetTab(id)
 	getglobal("RaidOrganizer_Tab" .. id):SetChecked(1);
-	for i=1,8 do
+	for i=1,9 do
 		if i ~= id then
 			getglobal("RaidOrganizer_Tab" .. i):SetChecked(nil);
 		end
@@ -944,17 +984,17 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
     self:RefreshTables()
 	
 	local function resizeLayout(size, moreRemain)
-		getglobal("RaidOrganizerDialogEinteilungRaiderpool"):SetWidth(size)
+
 		for grp = 1,  9 do
-			for slot = 1, 10 do
+			for slot = 1, 30 do
 				getglobal("RaidOrganizerDialogEinteilungHealGroup" .. grp .. "Slot" .. slot):SetWidth(size)
 			end
 			getglobal("RaidOrganizerDialogEinteilungHealGroup".. grp):SetWidth(size)
 		end
 		if moreRemain then
-			getglobal("RaidOrganizerDialogEinteilungHealGroup".. 1):SetPoint("TOPLEFT", RaidOrganizerDialogEinteilungRaiderpool, "TOPRIGHT", size + 10, 0 )
+			RaidOrganizerDialogEinteilungRaiderpool:SetWidth(2*size)
 		else
-			getglobal("RaidOrganizerDialogEinteilungHealGroup".. 1):SetPoint("TOPLEFT", RaidOrganizerDialogEinteilungRaiderpool, "TOPRIGHT", 10, 0 )
+			RaidOrganizerDialogEinteilungRaiderpool:SetWidth(size)
 		end
 		for i=1, 72 do	
 			if i < 41 then
@@ -969,7 +1009,7 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 			end
 			getglobal("RaidOrganizerDialogButton"..i):SetWidth(size)
 		end
-
+		RaidOrganizerDialogEinteilungOptionen:SetPoint("BOTTOMLEFT", RaidOrganizerDialogEinteilungRaiderpool, "BOTTOMLEFT", 5 + size, 0 )
 	end
 	
 	--if too many people in raid
@@ -978,14 +1018,21 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 		total_remain = table.getn(einteilung[1])
 	end
 	
-	if total_remain > 24 and not moreThan24Display then
+	if RaidOrganizerDialog.selectedTab == 9 then
+		resizeLayout(70, true)
+		RaidOrganizerDialogEinteilungHealGroup2:SetPoint("TOPLEFT", RaidOrganizerDialogEinteilungHealGroup1, "TOPRIGHT", 10, 0 )
+		for i=1, RaidOrganizer.CONST.NUM_GROUPS[9] do
+			getglobal("RaidOrganizerDialogEinteilungHealGroup".. i):SetWidth(140)
+		end
+		moreThan24Display = true
+	elseif total_remain > 24 and not moreThan24Display then
 		resizeLayout(80, true)
 		moreThan24Display = true
 	elseif total_remain <= 24 and moreThan24Display then
 		resizeLayout(98, false)
 		moreThan24Display = false
 	end
-		
+	
     -- stats aktuallisieren {{{
 	local classes = classTab[RaidOrganizerDialog.selectedTab]
 	for grp = 1,  9 do
@@ -995,7 +1042,7 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 			getglobal("RaidOrganizerDialogEinteilungHealGroup" .. grp):Show();
 		end
 		getglobal("RaidOrganizerDialogEinteilungHealGroup" .. grp):SetHeight(131-(10-RaidOrganizer.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab])*13)
-		for slot = 1, 10 do
+		for slot = 1, 30 do
 			if slot > RaidOrganizer.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
 				getglobal("RaidOrganizerDialogEinteilungHealGroup" .. grp .. "Slot" .. slot):Hide();
 			else
@@ -1006,12 +1053,12 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 	if(GetNumRaidMembers() == 0) then
 		getglobal("RaidOrganizerDialogEinteilungStatsClass" .. 1):SetText("NOT IN RAID")
 		getglobal("RaidOrganizerDialogEinteilungStatsClass" .. 1):SetTextColor(1,0,0)
-		RaidOrganizerDialogEinteilungStats:SetHeight(38)
-		for i=2, 6 do
+		RaidOrganizerDialogEinteilungStats:SetHeight(37)
+		for i=2, 8 do
 			getglobal("RaidOrganizerDialogEinteilungStatsClass" .. i):SetText("")
 		end
 	else
-		for i=1, 6 do
+		for i=1, 8 do
 			if i <= table.getn(classes) then
 				getglobal("RaidOrganizerDialogEinteilungStatsClass" .. i):SetText(L[classes[i]]..": "..stats[classes[i]])
 				getglobal("RaidOrganizerDialogEinteilungStatsClass" .. i):SetTextColor(RAID_CLASS_COLORS[classes[i]].r,
@@ -1021,7 +1068,8 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 				getglobal("RaidOrganizerDialogEinteilungStatsClass" .. i):SetText("")
 			end
 		end
-		RaidOrganizerDialogEinteilungStats:SetHeight(table.getn(classes)*23+15/table.getn(classes))
+		local autoSizeStatsLUT = {37, 37, 57, 57, 75, 75, 94, 94}
+		RaidOrganizerDialogEinteilungStats:SetHeight(autoSizeStatsLUT[table.getn(classTab[RaidOrganizerDialog.selectedTab])])
 	end
 
     -- slot-lables aktuallisieren {{{
@@ -1296,99 +1344,14 @@ function RaidOrganizer:RaiderOnDragStop() -- {{{
     this:SetFrameLevel(level_of_button)
     this:StopMovingOrSizing()
     -- gucken wo ich bin?
-    local pools = {
-        "RaidOrganizerDialogEinteilungRaiderpool",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup1Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup1Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup1Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup2Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup2Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup2Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup3Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup3Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup3Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup4Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup4Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup4Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup5Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup5Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup5Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup6Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup6Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup6Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup7Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup7Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup7Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup8Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup8Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup8Slot10",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot1",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot2",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot3",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot4",
-		"RaidOrganizerDialogEinteilungHealGroup9Slot5",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot6",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot7",
-		"RaidOrganizerDialogEinteilungHealGroup9Slot8",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot9",
-        "RaidOrganizerDialogEinteilungHealGroup9Slot10",
-    }
+	
+	local pools = {"RaidOrganizerDialogEinteilungRaiderpool"}
+	for group = 1, 9 do
+		for slot = 1, 30 do
+			table.insert(pools, "RaidOrganizerDialogEinteilungHealGroup" .. group .. "Slot" .. slot)
+		end
+	end
+
     for _, pool in pairs(pools) do
 		local _,_,group,slot = string.find(pool, "RaidOrganizerDialogEinteilungHealGroup(%d+)Slot(%d+)");
 		group,slot = tonumber(group),tonumber(slot)
@@ -1448,14 +1411,6 @@ function RaidOrganizer:RaiderOnLoad() -- {{{
     -- 2 = passt ;)
     this:SetFrameLevel(this:GetFrameLevel() + 2)
     this:RegisterForDrag("LeftButton")
-	--if not RO_RaiderTable or (not table.getn(RO_RaiderTable) == 8) then
-		-- RO_RaiderTable = {{},{},{},{},{},{},{},{},}
-	--end
-	--if not RO_CurrentSet or (not table.getn(RO_CurrentSet) == 8) then
-	--	RO_CurrentSet = {L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"], L["SET_DEFAULT"]}
-		-- RO_RaiderTable = {{},{},{},{},{},{},{},{},}
-	--end
-	-- RaidOrganizer:RefreshRaiderTable()
 end -- }}}
 
 function RaidOrganizer:EditGroupLabel(group) -- {{{
@@ -1498,7 +1453,7 @@ function RaidOrganizer:LoadLabelsFromSet(set) -- {{{
         RaidOrganizerDialogEinteilungRestAction:SetText(self.db.account.sets[RaidOrganizerDialog.selectedTab][set].Restaktion)
         if tempsetup[set] then
             -- laden
-            RO_RaiderTable = {{},{},{},{},{},{},{},{},} -- reset
+            RO_RaiderTable[RaidOrganizerDialog.selectedTab] = {} -- reset
             for name, einteilung in pairs(tempsetup[set]) do
                 RO_RaiderTable[RaidOrganizerDialog.selectedTab][name] = einteilung
             end
@@ -1756,7 +1711,7 @@ function RaidOrganizer:OnMouseWheel(richtung) -- {{{
 end -- }}}
 
 function RaidOrganizer:GetLabelByClass(class) -- {{{
-    if not class then
+    if (not class) or class == "" then
         return L["FREE"]
     end
     self:Debug("Klasse ist "..class)
@@ -2020,7 +1975,7 @@ function RaidOrganizer:WriteTooltipText(id)
 		for nameChar in RO_RaiderTable[id] do
 			if RO_RaiderTable[id][nameChar][group + 1] then
 				local _, engClass = UnitClass(self:GetUnitByName(nameChar))
-				if not engClass then
+				if not (engClass == nil or engClass == "") then
 					if playerNameTable[engClass] == nil then
 						playerNameTable[engClass] = nameChar
 					else
@@ -2060,7 +2015,7 @@ function RaidOrganizer:RAID_ROSTER_UPDATE()
 		if RaidOrganizerDialog:IsShown() then
 			self:UpdateDialogValues()
 		end
-		for tab = 1, 8 do
+		for tab = 1, 9 do
 			RaidOrganizer:RaidOrganizer_SendSync(tab);
 		end
 	elseif not UnitInRaid('player') then
@@ -2086,7 +2041,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 			if sender == UnitName('player') then
 				return
 			elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
-				for tab = 1, 8 do
+				for tab = 1, 9 do
 					RaidOrganizer:RaidOrganizer_SendSync(tab);
 				end
 			end
