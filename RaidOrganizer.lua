@@ -1571,7 +1571,7 @@ function RaidOrganizer:OnMouseWheel(richtung) -- {{{
 	for k,v in pairs(classTab[RaidOrganizerDialog.selectedTab]) do
 		classdirection[k] = v;
 	end
-	if RaidOrganizerDialog.selectedTab == RAID then
+	if RaidOrganizerDialog.selectedTab == RAID_PLACEMENT_TAB_INDEX then
 		for i = 1, 8 do
 			table.insert(classdirection, "Group" .. i);
 		end
