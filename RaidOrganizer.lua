@@ -1006,6 +1006,14 @@ function RaidOrganizer_SetTab(id)
 	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[id], RO_CurrentSet[id]);
 	RaidOrganizer:LoadCurrentLabels()
 	RaidOrganizer:UpdateDialogValues();
+	
+	if RaidOrganizerDialog.selectedTab == 10 then
+		RaidOrganizerDialogBroadcastSync:SetText("Reorganize Raid")
+	elseif RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
+		RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
+	else
+		RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
+	end
 end
 
 function RaidOrganizer:Dialog() -- {{{
@@ -1273,9 +1281,6 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
     UIDropDownMenu_Refresh(RaidOrganizerDialogEinteilungSetsDropDown)
     UIDropDownMenu_SetWidth(150, RaidOrganizerDialogEinteilungSetsDropDown);
 	
-	if RaidOrganizerDialog.selectedTab == 10 then
-		RaidOrganizerDialogBroadcastSync:SetText("Reorganize Raid")
-	end
 end -- }}}
 
 function RaidOrganizer:ResetTab() -- {{{
