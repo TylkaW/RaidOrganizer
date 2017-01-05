@@ -4,74 +4,112 @@ local dewdrop = AceLibrary("Dewdrop-2.0")
 local options = {
     type = 'group',
     args = {
-        showButtons = {
-            type = 'execute',
-            name = 'Show/Hide Buttons',
-            desc = L["SHOW_DIALOG"],
-            func = function() RaidOrganizer:ShowButtons() end,
+		barDisplay = {
+			type = 'group',
+			name = 'Bar options',
+			desc = 'Shortcut button bar display options',
+			args = {
+				horizontal = {
+				type = 'toggle',
+				name = 'Horizontal',
+				desc = 'Show buttons horizontally or vertically',
+				get = function() return RaidOrganizer.db.char.horizontal end,
+				set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
+				},
+				scale = {
+					type = 'range',
+					name = "Scale",
+					desc = "Shortcut button bar scale",
+					get = function() return RaidOrganizer.db.char.scale end,
+					set = function(v)
+						RaidOrganizer.db.char.scale = v
+						RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
+						RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
+					end,
+					min = 0.5,
+					max = 2,
+					step = 0.01,
+					order = 2
+				},
+			}
+		},
+        showBar = {
+			type = 'toggle',
+			name = 'Show bar',
+			desc = 'Show/Hide shortcut button bar',
+			get = function() return RaidOrganizer.db.char.showBar end,
+			set = function() RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar; RaidOrganizer:ShowButtons() end,
+				
         },
 		showDialog = {
             type = 'execute',
-            name = 'Show/Hide Dialog',
+            name = 'Show Dialog',
             desc = L["SHOW_DIALOG"],
             func = function() RaidOrganizer:Dialog() end,
         },
-        autosort = {
-            type = 'toggle',
-            name = 'Autosort',
-            desc = L["AUTOSORT_DESC"],
-            get = function() return RaidOrganizer.db.char.autosort end,
-            set = function() RaidOrganizer.db.char.autosort = not RaidOrganizer.db.char.autosort end,
-        },
-		horizontal = {
-			type = 'toggle',
-			name = 'Horizontal display',
-			desc = 'Show buttons horizontally or vertically',
-			get = function() return RaidOrganizer.db.char.horizontal end,
-            set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
-		},
-		scale = {
-			type = 'range',
-			name = "Button frame scale",
-			desc = "Button fram scale",
-			get = function() return RaidOrganizer.db.char.scale end,
-			set = function(v)
-				RaidOrganizer.db.char.scale = v
-				RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
-				RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
-			end,
-			min = 0.5,
-			max = 2,
-			step = 0.01,
-			order = 2
-		},
 		minimap = {
 			type = "group",
-			name = 'Minimap Button options',
-			desc = 'Minimap Button options',
+			name = 'Minimap',
+			desc = 'Minimap button options',
 			args = {
 				showMinimap = {
 					type = 'toggle',
-					name = 'Toggle Minimap icon',
-					desc = 'Show/Hide Minimap icon',
+					name = 'Show',
+					desc = 'Show/Hide minimap button',
 					get = function() return RaidOrganizer.db.char.showMinimap end,
 					set = function() RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end end,
 				},
 				lockMinimap = {
 					type = 'toggle',
-					name = 'Lock Minimap',
+					name = 'Lock',
 					desc = 'Lock Minimap button',
 					get = function() return RaidOrganizer.db.char.lockMinimap end,
 					set = function() RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap end,
+				},
+				minimapPosition = {
+					type = 'group',
+					name = 'Position',
+					desc = 'Minimap button position',
+					args = {
+						minimapPositionX = {
+							type = 'range',
+							name = "x",
+							desc = "Minimap button angle",
+							get = function() return RaidOrganizer.db.char.minimapPositionX end,
+							set = function(v)
+								RaidOrganizer.db.char.minimapPositionX = v
+								RaidOrganizer_Minimap_Position(v, RaidOrganizer.db.char.minimapPositionY)
+							end,
+							min = 0,
+							max = 360,
+							step = 0.5,
+							order = 2
+						},
+						minimapPositionY = {
+							type = 'range',
+							name = "y",
+							desc = "Minimap button position",
+							get = function() return RaidOrganizer.db.char.minimapPositionY end,
+							set = function(v)
+								RaidOrganizer.db.char.minimapPositionY = v
+								RaidOrganizer_Minimap_Position(RaidOrganizer.db.char.minimapPositionX, v)
+							end,
+							min = -30,
+							max = 30,
+							step = 0.5,
+							order = 2
+						},
+					}
 				},
 			}
 		},
 		versionQuery = {
 			type = "toggle",
-			name = 'Version Query',
+			name = 'Check version',
 			desc = 'Query raid member RaidOrganizer version',
-			get = function() return b_versionQuery end,
-			set = function() b_versionQuery = not b_versionQuery; if b_versionQuery then if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to query version"); end end end,
+			get = function() return RaidOrganizer.b_versionQuery end,
+			set = function() RaidOrganizer.b_versionQuery = not RaidOrganizer.b_versionQuery; if RaidOrganizer.b_versionQuery then if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else RaidOrganizer.b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to check raid version"); end end end,
+			disabled = function() return not RaidOrganizer:IsActive() end,
 		},
     }
 }
@@ -83,7 +121,6 @@ local unitids = {
 }
 local position = {
 }
-local overrideSort = false
 local lastAction = {
     name = {},
     position = {},
@@ -200,11 +237,13 @@ RaidOrganizer:RegisterChatCommand({"/RaidOrganizer", "/raidorg", "/ro"}, options
 RaidOrganizer:RegisterDB("RaidOrganizerDB", "RaidOrganizerDBPerChar")
 RaidOrganizer:RegisterDefaults('char', {
 	chan = "",
-	show = false,
-	autosort = true,
+	showBar = true,
 	horizontal = false,
 	minimapLock = false,
 	minimapHide = false,
+	minimapPositionX = 0,
+	minimapPositionY = 0,
+	scale = 1.0
 })
 
 RaidOrganizer:RegisterDefaults('account', {
@@ -499,11 +538,6 @@ RaidOrganizer.b_versionQuery = false
 RaidOrganizer.RO_version_table = {}
 
 function RaidOrganizer:OnInitialize() -- {{{
-    -- Called when the addon is loaded
-    --self:SetDebugging(true)
-    self:RegisterEvent("CHAT_MSG_WHISPER")
-	self:RegisterEvent("CHAT_MSG_ADDON")
-	self:RegisterEvent("RAID_ROSTER_UPDATE")
     StaticPopupDialogs["RaidOrganizer_EDITLABEL"] = { --{{{
         text = L["EDIT_LABEL"],
         button1 = TEXT(SAVE),
@@ -654,47 +688,63 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
     -- standard fuer dropdown setzen
     UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab], RO_CurrentSet[RaidOrganizerDialog.selectedTab]);
-	if not self.db.char.scale then self.db.char.scale = 1.0 end
-	if UnitInRaid('player') and RaidOrganizer.db.char.show then
-		RaidOrganizerButtonsHorizontal:SetScale(tonumber(self.db.char.scale))
-		RaidOrganizerButtonsVertical:SetScale(tonumber(self.db.char.scale))
-		self:ShowButtons()
-	end
+
+	RaidOrganizerButtonsHorizontal:SetScale(tonumber(self.db.char.scale))
+	RaidOrganizerButtonsVertical:SetScale(tonumber(self.db.char.scale))
+	self:ShowButtons()
+	
     self:LoadCurrentLabels()
+	
+	if not self.version then self.version = GetAddOnMetadata("RaidOrganizer", "Version") end
+	RaidOrganizer.RO_version_table = {}
+
+	RaidOrganizerMinimapButton_OnInitialize()
+	
+	if self:IsActive() then
+		self:OnEnable()
+	else
+		self:OnDisable()
+	end
+
 	self:RaidOrganizer_AskSync()
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
-	
-	if not self.version then self.version = GetAddOnMetadata("RaidOrganizer", "Version") end
-	RaidOrganizer.RO_version_table = {}
-	RaidOrganizerMinimapButton_OnInitialize()
-
 end -- }}}
 
 function RaidOrganizer:OnEnable() -- {{{
     -- Called when the addon is enabled
+	RaidOrganizerMinimapButton:GetNormalTexture():SetDesaturated(false)
+	RaidOrganizerMinimapButton:GetPushedTexture():SetDesaturated(false)
+	self:RegisterEvent("CHAT_MSG_WHISPER")
+	self:RegisterEvent("CHAT_MSG_ADDON")
+	self:RegisterEvent("RAID_ROSTER_UPDATE")
+	RaidOrganizerDialogEinteilungOptionenAutofill:Enable()
+	RaidOrganizerDialogBroadcastSync:Enable()
+	RaidOrganizerDialogBroadcastChannel:Enable()
+	RaidOrganizerDialogBroadcastRaid:Enable()
+	
+	self:UpdateDialogValues()
 end -- }}}
 
 function RaidOrganizer:OnDisable() -- {{{
     -- Called when the addon is disabled
+	RaidOrganizerMinimapButton:GetNormalTexture():SetDesaturated(true)
+	RaidOrganizerMinimapButton:GetPushedTexture():SetDesaturated(true)
+	self:UnregisterAllEvents();
+	self:ResetData();
+	RaidOrganizerDialogEinteilungOptionenAutofill:Disable()
+	RaidOrganizerDialogBroadcastSync:Disable()
+	RaidOrganizerDialogBroadcastChannel:Disable()
+	RaidOrganizerDialogBroadcastRaid:Disable()
 end -- }}}
 
 function RaidOrganizer:RefreshRaiderTable()
 	if UnitInRaid('player') then
-		local listName = {};
-		for i=1, MAX_RAID_MEMBERS do
-			if not UnitExists("raid"..i) then
-			   
-			else
-				local unitname = UnitName("raid"..i)
-				listName[unitname] = 1
-			end
-		end
 		for i = 1, TOTAL_TAB_NB do
 			if RO_RaiderTable[i] then
 				for name in RO_RaiderTable[i] do
-					if not listName[name] then
+					if not UnitExists(self:GetUnitByName(name)) then
 						RO_RaiderTable[i][name] = nil
 					end
 				end
@@ -731,62 +781,65 @@ function RaidOrganizer:RefreshTables() --{{{
     }
 	
 	groupByName = {}
-
-    for i=1, MAX_RAID_MEMBERS do
-        if UnitExists("raid"..i) then
-            local class,engClass = UnitClass("raid"..i)
-            local unitname, _, subgroup = GetRaidRosterInfo(i)
-			if subgroup ~= nil and unitname ~= nil then
-				groupByName[unitname] = subgroup
-			end
-			local isClassInTab = nil
-			local InGroup = nil
-			for j=1, table.getn(classTab[RaidOrganizerDialog.selectedTab]) do
-				if engClass == classTab[RaidOrganizerDialog.selectedTab][j] then
-					if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname] then
-						if not RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] then
-							for k=1, MAX_GROUP_NB do
-								if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] then
-									if gruppen[k+1] >= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
-										RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] = nil
-									else
-										InGroup = 1
+	
+	if self:IsActive() then
+		for i=1, MAX_RAID_MEMBERS do
+			if UnitExists("raid"..i) then
+				local class,engClass = UnitClass("raid"..i)
+				local unitname, _, subgroup = GetRaidRosterInfo(i)
+				if subgroup ~= nil and unitname ~= nil then
+					groupByName[unitname] = subgroup
+				end
+				local isClassInTab = nil
+				local InGroup = nil
+				for j=1, table.getn(classTab[RaidOrganizerDialog.selectedTab]) do
+					if engClass == classTab[RaidOrganizerDialog.selectedTab][j] then
+						if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname] then
+							if not RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] then
+								for k=1, MAX_GROUP_NB do
+									if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] then
+										if gruppen[k+1] >= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
+											RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] = nil
+										else
+											InGroup = 1
+										end
+									end
+								end
+								if InGroup == nil or RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == 1 then
+									RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] = 1
+								end
+							elseif RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == 1 then
+								for k=1, MAX_GROUP_NB do
+									if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] then
+										if gruppen[k+1] >= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
+											RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] = nil
+										end
 									end
 								end
 							end
-							if InGroup == nil or RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == 1 then
-								RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] = 1
-							end
-						elseif RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == 1 then
-							for k=1, MAX_GROUP_NB do
-								if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] then
-									if gruppen[k+1] >= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
-										RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] = nil
-									end
-								end
+						else
+							RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname]={}
+							RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] = 1
+						end
+						for k=1, MAX_GROUP_NB + 1 do
+							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] then
+								gruppen[k] = gruppen[k] + 1
 							end
 						end
-					else
-						RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname]={}
-						RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] = 1
+						stats[engClass] = stats[engClass] + 1 
+						isClassInTab = 1
 					end
-					for k=1, MAX_GROUP_NB + 1 do
-						if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k] then
-							gruppen[k] = gruppen[k] + 1
-						end
-					end
-					stats[engClass] = stats[engClass] + 1 
-					isClassInTab = 1
+				end
+				if not isClassInTab then
+					RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname] = nil
+				end
+				position[unitname] = {}
+				for k=1, MAX_GROUP_NB + 1 do
+					table.insert(position[unitname], 0)
 				end
 			end
-            if not isClassInTab then
-                RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname] = nil
-            end
-			for k=1, MAX_GROUP_NB + 1 do
-				table.insert(position[unitname], 0)
-			end
-        end
-    end
+		end
+	end
 
     einteilung = {}
 	for i=1, MAX_GROUP_NB + 1 do
@@ -806,104 +859,71 @@ function RaidOrganizer:RefreshTables() --{{{
     local function SortEinteilung(a, b) --{{{
 		if b == nil then return end
 		if a == nil then return end
-        if (self.db.char.autosort or overrideSort) then
-            local unitIDa = self:GetUnitByName(a)
-            local unitIDb = self:GetUnitByName(b)
-            local classA, engClassA = UnitClass(unitIDa)
-            local classB, engClassB = UnitClass(unitIDb)
-            if engClassA ~= engClassB then
-					if engClassA == "WARRIOR" then -- (Warrior, *)
-                            return true
-                    end
-                    if engClassB == "WARRIOR" then -- (*, Warrior)
-                            return false
-                    end
-					if engClassA == "ROGUE" then -- (Rogue, *)
-                            return true
-                    end
-                    if engClassB == "ROGUE" then -- (*, Rogue)
-                            return false
-                    end
-					if engClassA == "MAGE" then -- (Mage, *)
-                            return true
-                    end
-                    if engClassB == "MAGE" then -- (*, Mage)
-                            return false
-                    end
-					if engClassA == "WARLOCK" then -- (Warlock, *)
-                            return true
-                    end
-                    if engClassB == "WARLOCK" then -- (*, Warlock)
-                            return false
-                    end
-					if engClassA == "HUNTER" then -- (Hunter, *)
-                            return true
-                    end
-                    if engClassB == "HUNTER" then -- (*, Hunter)
-                            return false
-                    end
-                    if engClassA == "PRIEST" then -- (Priest, *)
-                            return true
-                    end
-                    if engClassB == "PRIEST" then -- (*, Priest)
-                            return false
-                    end
-                    if engClassA == "SHAMAN" then -- (*, Shaman)
-                            return true
-                    end
-                    if engClassB == "SHAMAN" then -- (Shaman, *)
-                            return false
-                    end
-                    if engClassA == "DRUID" then -- (Druid, *)
-                            return true
-                    end
-                    if engClassB == "DRUID" then -- (*, Druid)
-                            return false
-                    end
-                    if engClassA == "PALADIN" then -- (*, Paladin)
-                            return true
-                    end
-                    if engClassB == "PALADIN" then -- (Paladin, *)
-                            return false
-                    end
-            else
-                    return a<b
-            end
-            return true
-		else 
-            if (position[a][groupIndex] and position[b][groupIndex]) then
-                if position[a][groupIndex] == position[b][groupIndex] and lastAction["position"][groupIndex] then
-                    if lastAction["position"][groupIndex] == 0 then
-                        if a == lastAction["name"] then
-                            return true
-                        elseif b == lastAction["name"] then
-                            return false
-                        end
-                        return true
-                    end
-                    if a == lastAction["name"] then
-                        if lastAction["position"][groupIndex] > position[a][groupIndex] then
-                            return true
-                        else
-                            return false
-                        end
-                    elseif b == lastAction["name"] then
-                        if lastAction["position"][groupIndex] > position[b][groupIndex] then
-                            return false
-                        else
-                            return true
-                        end
-                    end
-                end
-                return position[a][groupIndex] < position[b][groupIndex]
-            end
-            return true
-        end
+		local unitIDa = self:GetUnitByName(a)
+		local unitIDb = self:GetUnitByName(b)
+		local classA, engClassA = UnitClass(unitIDa)
+		local classB, engClassB = UnitClass(unitIDb)
+		if engClassA ~= engClassB then
+				if engClassA == "WARRIOR" then -- (Warrior, *)
+						return true
+				end
+				if engClassB == "WARRIOR" then -- (*, Warrior)
+						return false
+				end
+				if engClassA == "ROGUE" then -- (Rogue, *)
+						return true
+				end
+				if engClassB == "ROGUE" then -- (*, Rogue)
+						return false
+				end
+				if engClassA == "MAGE" then -- (Mage, *)
+						return true
+				end
+				if engClassB == "MAGE" then -- (*, Mage)
+						return false
+				end
+				if engClassA == "WARLOCK" then -- (Warlock, *)
+						return true
+				end
+				if engClassB == "WARLOCK" then -- (*, Warlock)
+						return false
+				end
+				if engClassA == "HUNTER" then -- (Hunter, *)
+						return true
+				end
+				if engClassB == "HUNTER" then -- (*, Hunter)
+						return false
+				end
+				if engClassA == "PRIEST" then -- (Priest, *)
+						return true
+				end
+				if engClassB == "PRIEST" then -- (*, Priest)
+						return false
+				end
+				if engClassA == "SHAMAN" then -- (*, Shaman)
+						return true
+				end
+				if engClassB == "SHAMAN" then -- (Shaman, *)
+						return false
+				end
+				if engClassA == "DRUID" then -- (Druid, *)
+						return true
+				end
+				if engClassB == "DRUID" then -- (*, Druid)
+						return false
+				end
+				if engClassA == "PALADIN" then -- (*, Paladin)
+						return true
+				end
+				if engClassB == "PALADIN" then -- (Paladin, *)
+						return false
+				end
+		else
+				return a<b
+		end
+		return true
     end --}}}
     for key, _ in pairs(einteilung) do
-        if key == 1 then
-                overrideSort = true
-        end
 		groupIndex = key
         table.sort(einteilung[key], SortEinteilung)
         for index, name in pairs(einteilung[key]) do
@@ -914,7 +934,6 @@ function RaidOrganizer:RefreshTables() --{{{
 			end
             position[name][key] = index
         end
-        overrideSort = false
     end
 end -- }}}
 
@@ -1190,10 +1209,6 @@ function RaidOrganizer:ResetData() -- {{{
 		table.insert(RO_RaiderTable, {})
 	end
 	einteilung = {}
-    groupclasses = {}
-    for i=1, MAX_GROUP_NB do
-        groupclasses[i] = {}
-    end
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
@@ -1543,12 +1558,17 @@ function RaidOrganizer:CHAT_MSG_WHISPER(msg, user) -- {{{
     end
     if msg == "assign" then
         local reply = ""
-		L["REPLY_NO_ARRANGEMENT"]
 		local noassign = true
 		for i=1, SYNC_TAB_NB do
         	if RO_RaiderTable[i][user] then
-            	reply = reply .. " " .. RaidOrganizer_Tabs[i][1] .. " " .. string.format(L["REPLY_ARRANGEMENT_FOR"], self:ReplaceTokens(grouplabels[RO_RaiderTable[i][user]]) .. " ")
+            	reply = reply .. " " .. RaidOrganizer_Tabs[i][1] .. " " .. self:ReplaceTokens(grouplabels[RO_RaiderTable[i][user]])
+				noassign = false
 			end
+		end
+		if noassign then
+			reply = L["REPLY_NO_ARRANGEMENT"] .. " " .. reply
+		else
+			reply = L["REPLY_ARRANGEMENT_FOR"] .. " " .. reply
 		end
         ChatThrottleLib:SendChatMessage("NORMAL", nil, reply, "WHISPER", nil, user)
     end
@@ -1869,26 +1889,24 @@ end
 function RaidOrganizer:ShowButtons()
 	if RaidOrganizer.db.char.horizontal then
 		RaidOrganizerButtonsVertical:Hide()
-		if RaidOrganizerButtonsHorizontal:IsShown() then
+		if not RaidOrganizer.db.char.showBar then
 			RaidOrganizerButtonsHorizontal:Hide()
-			RaidOrganizer.db.char.show = false
 		else
 			RaidOrganizerButtonsHorizontal:Show()
-			RaidOrganizer.db.char.show = true
 		end
 	else
 		RaidOrganizerButtonsHorizontal:Hide()
-		if RaidOrganizerButtonsVertical:IsShown() then
+		if not RaidOrganizer.db.char.showBar then
 			RaidOrganizerButtonsVertical:Hide()
-			RaidOrganizer.db.char.show = false
 		else
 			RaidOrganizerButtonsVertical:Show()
-			RaidOrganizer.db.char.show = true
 		end
 	end
 end
 
-function RaidOrganizer:WriteTooltipText(id) 
+function RaidOrganizer:WriteTooltipText(id)
+	if not RaidOrganizer:IsActive() then return end
+	
 	GameTooltip:SetText(this.tooltiptext);
 	if ( not id ) then
 		id = this:GetID();
@@ -1969,7 +1987,7 @@ end
 function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	
 	if (prefix == "ROVersion") then 
-		if b_versionQuery then
+		if self.b_versionQuery then
 			self.RO_version_table[sender] = message
 		end
 	end
@@ -2065,7 +2083,68 @@ function RaidOrganizer:AutoSync_OnClick()
 end
 
 function RaidOrganizer:ReorganizeRaid()
+	self:RefreshRaiderTable()
+	self:UpdateDialogValues()
+	raidIDPerGroup = {{},{},{},{},{},{},{},{}}
+	local count = 0
+	for i=1, MAX_RAID_MEMBERS do
+		if UnitExists("raid"..i) then
+			count = count + 1
+			local unitname,_,subgroup = GetRaidRosterInfo(i)
+			table.insert(raidIDPerGroup[subgroup], i)
+		end
+	end
+	if count == 40 then return end
 
+	for i=1, MAX_RAID_MEMBERS do
+		if UnitExists("raid"..i) then
+			unitname = UnitName("raid"..i)
+			local group = 0
+			if RO_RaiderTable[RAID_FILL_TAB_INDEX][unitname] then
+				for j = 1, self.CONST.NUM_GROUPS[RAID_FILL_TAB_INDEX] do
+					if RO_RaiderTable[RAID_FILL_TAB_INDEX][unitname][j+1] then
+						group = j
+						break
+					end
+				end
+				
+				if not (groupByName[unitname] == group) then
+					self:Debug(unitname)
+					local currentID = i
+					local currentGroup = groupByName[unitname]
+					local currentTableIndex = 0
+					local targetID = 0
+					local targetGroup = group
+					local targetTabIndex = 0
+					for k = 1, 5 do
+						if raidIDPerGroup[currentGroup][k] then
+							if raidIDPerGroup[currentGroup][k] == currentID then
+								currentTableIndex = k
+								break
+							end
+						end
+					end
+					for j = 1, 5 do
+						if raidIDPerGroup[group][j] then
+							targetID = raidIDPerGroup[group][j]
+							if (not RO_RaiderTable[RAID_FILL_TAB_INDEX][UnitName("raid"..targetID)]) or (not RO_RaiderTable[RAID_FILL_TAB_INDEX][UnitName("raid"..targetID)][group+1] == 1) then
+								SetRaidSubgroup(targetID, 8)
+								SetRaidSubgroup(currentID, targetGroup)
+								SetRaidSubgroup(targetID, currentGroup)
+								groupByName[UnitName("raid"..targetID)] = currentGroup
+								groupByName[unitname] = group
+								raidIDPerGroup[group][j] = i
+								raidIDPerGroup[currentGroup][currentTableIndex] = targetID
+								break
+							end
+						else
+							SetRaidSubgroup(currentID, targetGroup)
+						end
+					end
+				end
+			end
+		end
+	end
 end
 
 function RaidOrganizer:RaidOrganizer_SyncOnClick()
@@ -2161,7 +2240,7 @@ function RaidOrganizer_Minimap_OnEnter()
 	local color1, color2 = {1,1,1}, {1,1,1};
 	local tmpstr = "";
 	local tmpcolor = {1,1,1}
-	if (IsRaidLeader() or IsRaidOfficer()) and b_versionQuery then
+	if (IsRaidLeader() or IsRaidOfficer()) and self.b_versionQuery then
 		GameTooltip:AddLine(" ", 0,0,0);
 		GameTooltip:AddLine("Version Query :");
 		local charName = ""
@@ -2206,10 +2285,10 @@ end
 
 function RaidOrganizer_Minimap_Position(x,y)
 	if ( x or y ) then
-		if ( x ) then if ( x < 0 ) then x = x + 360; end MinimapPosition.x = x; end
-		if ( y ) then MinimapPosition.y = y; end
+		if ( x ) then if ( x < 0 ) then x = x + 360; end RaidOrganizer.db.char.minimapPositionX = x; end
+		if ( y ) then RaidOrganizer.db.char.minimapPositionY = y; end
 	end
-	x, y = MinimapPosition.x, MinimapPosition.y
+	x, y = RaidOrganizer.db.char.minimapPositionX, RaidOrganizer.db.char.minimapPositionY
 
 	RaidOrganizerMinimapButton:SetPoint("TOPLEFT","Minimap","TOPLEFT",53-((80+(y))*cos(x)),((80+(y))*sin(x))-55);
 end
@@ -2249,6 +2328,7 @@ end
 
 function RaidOrganizer_Minimap_OnClick(arg1)
 	if arg1 == "LeftButton" then
+		RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
 		RaidOrganizer:ShowButtons()
 	else
 		dewdrop:Open(RaidOrganizerMinimapButton)
@@ -2256,97 +2336,14 @@ function RaidOrganizer_Minimap_OnClick(arg1)
 end
 
 function RaidOrganizerMinimapButton_OnInitialize()
-	--dewdrop:Register(RaidOrganizerMinimapButton, 'children', RaidOrganizer.options)
-	dewdrop:Register(RaidOrganizerMinimapButton, 'dontHook', true, 'children', function(level, value) CreateDewDropMenu(level, value) end)
-	
-	RaidOrganizerMinimapButton:SetNormalTexture("Interface\\Icons\\Spell_Nature_Polymorph_Cow")
-	RaidOrganizerMinimapButton:SetPushedTexture("Interface\\Icons\\Spell_Nature_Polymorph_Cow")
-	
-	if MinimapPosition == nil then
-		MinimapPosition = {x=0, y=0}
-	end
+	dewdrop:Register(RaidOrganizerMinimapButton, 'children', function() dewdrop:FeedAceOptionsTable(options) end)
+
+	RaidOrganizerMinimapButton:SetNormalTexture("Interface\\Icons\\Inv_misc_head_dragon_black")
+	RaidOrganizerMinimapButton:SetPushedTexture("Interface\\Icons\\Inv_misc_head_dragon_black")
+
 	RaidOrganizer_Minimap_Position(nil, nil)
-	
-	if RaidOrganizer.db.char.lockMinimap == nil then
-		RaidOrganizer.db.char.lockMinimap = false
-	end
-	
-	if RaidOrganizer.db.char.showMinimap == nil then
-		RaidOrganizer.db.char.showMinimap = true
-	end
 	
 	if RaidOrganizer.db.char.showMinimap then
 		RaidOrganizerMinimapButton:Show()
-	end
-end
-
-function CreateDewDropMenu(level, value)
-	-- Create drewdrop menu
-    if level == 1 then
-        dewdrop:AddLine( 'text', "RaidOrganizer", 'isTitle', true )
-        dewdrop:AddLine( 'text', 'Show Buttons',
-						 'func', function() RaidOrganizer:ShowButtons(); end,
-            			 'tooltipTitle', 'Show Buttons',
-            			 'tooltipText', 'Click to show buttons'
-            		     )
-        dewdrop:AddLine( 'text', 'Show Dialog',
-						 'func', function() RaidOrganizer:Dialog(); end,
-            			 'tooltipTitle', 'Show Dialog',
-            			 'tooltipText', 'Click to show dialog'
-            		     )
-		dewdrop:AddLine( 'text', 'Scale',
-						 'hasArrow', true,
-						 'hasSlider', true,
-						 'sliderMin', 0.5,
-						 'sliderMax', 2,
-						 'sliderStep', 0.01,
-						 'sliderValue', RaidOrganizer.db.char.scale,
-						 'sliderFunc', function(value)
-								RaidOrganizer.db.char.scale = value
-								RaidOrganizerButtonsHorizontal:SetScale(value)
-								RaidOrganizerButtonsVertical:SetScale(value)
-							end,
-            			 'tooltipTitle', 'Bar Scale',
-            			 'tooltipText', 'Set Bar Scale'
-            		     )
-        dewdrop:AddLine( 'text', 'Horizontal Display',
-						 'checked', RaidOrganizer.db.char.horizontal,
-                         'func', function()
-                            RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons();
-                         end,
-                         'tooltipTitle', 'Horizontal Display',
-            			 'tooltipText', 'Check to display button horizontally, uncheck otherwise'
-                         )
-		dewdrop:AddLine( 'text', 'Minimap Button options',
-						 'hasArrow', true,
-            			 'value', "minimapOptions",
-                         'tooltipTitle', 'Minimap Button options',
-            			 'tooltipText', 'Show/hide and lock/unlock minimap button'
-                         )
-		dewdrop:AddLine( 'text', 'Version Query',
-						 'checked', b_versionQuery,
-						 'func', function() b_versionQuery = not b_versionQuery; if b_versionQuery then if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to query version"); end end end,
-						 'tooltipTitle', 'Version Query',
-						 'tooltipText', 'Ask raid member for their RaidOrganizer version'
-						 )
-	elseif level == 2 then    
-        if value == "minimapOptions" then
-			dewdrop:AddLine( 'text', 'Lock minimap button',
-						 'checked', RaidOrganizer.db.char.lockMinimap,
-                         'func', function()
-                            RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap;
-                         end,
-                         'tooltipTitle', 'Lock minimap button',
-            			 'tooltipText', 'Check to lock minimap button'
-                         )
-			dewdrop:AddLine( 'text', 'Hide minimap button',
-						 'checked', not RaidOrganizer.db.char.showMinimap,
-                         'func', function()
-                            RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if not RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Hide(); else RaidOrganizerMinimapButton:Show(); end
-                         end,
-                         'tooltipTitle', 'Hide minimap button',
-            			 'tooltipText', 'Check to hide minimap button'
-                         )
-		end
 	end
 end
