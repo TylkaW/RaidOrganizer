@@ -543,9 +543,6 @@ function RaidOrganizer:OnInitialize() -- {{{
         button1 = TEXT(SAVE),
         button2 = TEXT(CANCEL),
         OnAccept = function(a,b,c)
-            -- button gedrueckt, auf GetName/GetParent achten
-            self:Debug("accept gedrueckt")
-            self:Debug("ID ist "..change_id)
             self:SaveNewLabel(change_id, getglobal(this:GetParent():GetName().."EditBox"):GetText())
         end,
         OnHide = function()
@@ -956,16 +953,18 @@ function RaidOrganizer_SetTab(id)
 	RaidOrganizerDialogEinteilungTitle:SetText(RaidOrganizer_Tabs[id][1]);
 	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[id], RO_CurrentSet[id]);
 	RaidOrganizer:LoadCurrentLabels()
-	RaidOrganizer:UpdateDialogValues();
 	
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
 		RaidOrganizerDialogBroadcastSync:SetText("Reorganize Raid")
-		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked() = nil
+		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(nil)
+		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(1)
 	elseif RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
 		RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
 	else
 		RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
 	end
+	
+	RaidOrganizer:UpdateDialogValues();
 end
 
 function RaidOrganizer:Dialog() -- {{{
@@ -1357,8 +1356,6 @@ function RaidOrganizer:RaiderOnLoad() -- {{{
 end -- }}}
 
 function RaidOrganizer:EditGroupLabel(group) -- {{{
-    self:Debug(group:GetName())
-    self:Debug(group:GetID())
     if group:GetID() == 0 then
         return
     end
@@ -1636,7 +1633,7 @@ end -- }}}
 
 function RaidOrganizer:MultipleArrangementCheckBox_OnClick()
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
-		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked() == nil then
+		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(nil)
 	end
 	if RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil then
 		for name, groupTable in pairs(RO_RaiderTable[RaidOrganizerDialog.selectedTab]) do
@@ -1829,7 +1826,6 @@ function RaidOrganizer:AutoFill() -- {{{
 			for slot=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
 				if groupclasses[group][slot] then
 					if not einteilung[group+1][slot] then
-						self:Debug("ist platz")
 						for _, name in pairs(einteilung[1]) do
 							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil then
 								local class, engClass = UnitClass(self:GetUnitByName(name))
@@ -2106,24 +2102,22 @@ function RaidOrganizer:ReorganizeRaid()
 		raidIDPerGroup[i] = {0, 0, 0, 0, 0}
 	end
 	local count = 0
-	local group_full = {0, 0, 0, 0, 0, 0, 0, 0}
+	local group_count = {0, 0, 0, 0, 0, 0, 0, 0}
 	for i=1, MAX_RAID_MEMBERS do
 		if UnitExists("raid"..i) then
 			local unitname,_,subgroup = GetRaidRosterInfo(i)
 			for j=1,5 do
 				if raidIDPerGroup[subgroup][j] == 0 then
 					raidIDPerGroup[subgroup][j] = i
-					if j == 5 then
-						group_full[subgroup] = 1
-					end
+					group_count[subgroup] = group_count[subgroup] + 1
 					break
 				end
 			end
 		end
 	end
 	local backup_group = 0
-	for key, value in pairs(group_full) do
-		if value == 0 then
+	for key, value in pairs(group_count) do
+		if value < 5 then
 			backup_group = key
 		end
 	end
@@ -2141,40 +2135,47 @@ function RaidOrganizer:ReorganizeRaid()
 						break
 					end
 				end
-				if not (groupByName[unitname] == group) then
-					local currentID = i
-					local currentGroup = groupByName[unitname]
-					local currentTableIndex = 0
-					local targetID = 0
-					local targetGroup = group
-					local targetTableIndex = 0
-					for k = 1, 5 do
-						if raidIDPerGroup[currentGroup][k] == currentID then
-							currentTableIndex = k
-							break
-						end
-					end
-					
-					for targetTableIndex = 1, 5 do
-						if not (raidIDPerGroup[targetGroup][targetTableIndex] == 0) then
-							targetID = raidIDPerGroup[targetGroup][targetTableIndex]
-							self:Debug(RAID_FILL_TAB_INDEX .. " " .. UnitName("raid"..targetID) .. " " .. targetGroup + 1)
-							if (not (RO_RaiderTable[RAID_FILL_TAB_INDEX][UnitName("raid"..targetID)][targetGroup+1] == 1)) then
-								SetRaidSubgroup(targetID, backup_group)
-								SetRaidSubgroup(currentID, targetGroup)
-								backup_group = currentGroup
-								groupByName[UnitName("raid"..targetID)] = currentGroup
-								groupByName[unitname] = targetGroup
-								raidIDPerGroup[targetGroup][targetTableIndex] = i
-								raidIDPerGroup[currentGroup][currentTableIndex] = targetID
+				if group > 0 then
+					if not (groupByName[unitname] == group) then
+						local currentID = i
+						local currentGroup = groupByName[unitname]
+						local currentTableIndex = 0
+						local targetID = 0
+						local targetGroup = group
+						local targetTableIndex = 0
+						for k = 1, 5 do
+							if raidIDPerGroup[currentGroup][k] == currentID then
+								currentTableIndex = k
 								break
 							end
+						end
+						
+						if group_count[targetGroup] == 5 then
+							for targetTableIndex = 1, 5 do
+								targetID = raidIDPerGroup[targetGroup][targetTableIndex]
+								if (not (RO_RaiderTable[RAID_FILL_TAB_INDEX][UnitName("raid"..targetID)][targetGroup+1] == 1)) then
+									SetRaidSubgroup(targetID, backup_group)
+									SetRaidSubgroup(currentID, targetGroup)
+									SetRaidSubgroup(targetID, currentGroup)
+									groupByName[UnitName("raid"..targetID)] = currentGroup
+									groupByName[unitname] = targetGroup
+									raidIDPerGroup[targetGroup][targetTableIndex] = i
+									raidIDPerGroup[currentGroup][currentTableIndex] = targetID
+									break
+								end
+							end
 						else
-							SetRaidSubgroup(currentID, targetGroup)
-							groupByName[unitname] = targetGroup
-							raidIDPerGroup[currentGroup][currentTableIndex] = 0 
-							raidIDPerGroup[targetGroup][targetTableIndex] = currentID
-							break
+							for targetTableIndex = 1, 5 do
+								if raidIDPerGroup[targetGroup][targetTableIndex] == 0 then
+									SetRaidSubgroup(currentID, targetGroup)
+									groupByName[unitname] = targetGroup
+									raidIDPerGroup[currentGroup][currentTableIndex] = 0
+									group_count[currentGroup] = group_count[currentGroup] - 1
+									raidIDPerGroup[targetGroup][targetTableIndex] = currentID
+									group_count[targetGroup] = group_count[targetGroup] + 1
+									break
+								end
+							end
 						end
 					end
 				end
