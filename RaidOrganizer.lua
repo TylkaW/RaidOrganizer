@@ -946,7 +946,7 @@ end
 
 function RaidOrganizer_SetTab(id)
 	getglobal("RaidOrganizer_Tab" .. id):SetChecked(1);
-	for i=1,10 do
+	for i=1,TOTAL_TAB_NB do
 		if i ~= id then
 			getglobal("RaidOrganizer_Tab" .. i):SetChecked(nil);
 		end
@@ -960,6 +960,7 @@ function RaidOrganizer_SetTab(id)
 	
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
 		RaidOrganizerDialogBroadcastSync:SetText("Reorganize Raid")
+		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked() = nil
 	elseif RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
 		RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
 	else
@@ -1634,6 +1635,9 @@ function RaidOrganizer:GetLabelByClass(class) -- {{{
 end -- }}}
 
 function RaidOrganizer:MultipleArrangementCheckBox_OnClick()
+	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
+		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked() == nil then
+	end
 	if RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil then
 		for name, groupTable in pairs(RO_RaiderTable[RaidOrganizerDialog.selectedTab]) do
 			local count = 0
@@ -2124,7 +2128,7 @@ function RaidOrganizer:ReorganizeRaid()
 		end
 	end
 		
-	if backup_group == 0 then return end
+	if backup_group == 0 then DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Reorganize Raid can't be performed if raid is full. Remove a raider and try again.") 	return end
 
 	for i=1, MAX_RAID_MEMBERS do
 		if UnitExists("raid"..i) then
