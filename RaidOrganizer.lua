@@ -239,8 +239,8 @@ RaidOrganizer:RegisterDefaults('char', {
 	chan = "",
 	showBar = true,
 	horizontal = false,
-	minimapLock = false,
-	minimapHide = false,
+	lockMinimap = false,
+	showMinimap = true,
 	minimapPositionX = 0,
 	minimapPositionY = 0,
 	scale = 1.0
