@@ -1911,9 +1911,6 @@ function RaidOrganizer:ShowButtons()
 		if not RaidOrganizer.db.char.showBar then
 			RaidOrganizerButtonsHorizontal:Hide()
 		else
-			if not self:IsActive() then
-				self:ToggleActive()
-			end
 			RaidOrganizerButtonsHorizontal:Show()
 		end
 	else
@@ -1921,9 +1918,6 @@ function RaidOrganizer:ShowButtons()
 		if not RaidOrganizer.db.char.showBar then
 			RaidOrganizerButtonsVertical:Hide()
 		else
-			if not self:IsActive() then
-				self:ToggleActive()
-			end
 			RaidOrganizerButtonsVertical:Show()
 		end
 	end
@@ -2087,7 +2081,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 		
 		for j = 1, string.len(sync_raider_table[4 + i * 2]) do
 			charGroup = tonumber(string.sub(sync_raider_table[4 + i * 2], j, j));
-			if charGroup > 1 and charGroup <= self.CONST.GROUPS[tab_id] then
+			if charGroup > 1 and charGroup <= self.CONST.NUM_GROUPS[tab_id] then
 				RO_RaiderTable[tab_id][charName][charGroup + 1] = 1;
 				RO_RaiderTable[tab_id][charName][1] = nil;
 			end
@@ -2392,8 +2386,16 @@ end
 
 function RaidOrganizer_Minimap_OnClick(arg1)
 	if arg1 == "LeftButton" then
-		RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
-		RaidOrganizer:ShowButtons()
+		if not RaidOrganizer:IsActive() then
+			RaidOrganizer:ToggleActive()
+			if not RaidOrganizer.db.char.showBar then
+				RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
+				RaidOrganizer:ShowButtons()
+			end
+		else
+			RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
+			RaidOrganizer:ShowButtons()
+		end
 	else
 		dewdrop:Open(RaidOrganizerMinimapButton)
 	end
