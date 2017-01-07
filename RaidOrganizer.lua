@@ -2277,7 +2277,7 @@ function RaidOrganizer_Minimap_OnEnter()
 	local color1, color2 = {1,1,1}, {1,1,1};
 	local tmpstr = "";
 	local tmpcolor = {1,1,1}
-	if (IsRaidLeader() or IsRaidOfficer()) and RaidORganizer.b_versionQuery then
+	if (IsRaidLeader() or IsRaidOfficer()) and RaidOrganizer.b_versionQuery then
 		GameTooltip:AddLine(" ", 0,0,0);
 		GameTooltip:AddLine("Version Query :");
 		local charName = ""
