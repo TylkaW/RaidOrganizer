@@ -216,6 +216,7 @@ local BUFF_PRIEST_TAB_INDEX = 7
 local BUFF_DRUID_TAB_INDEX = 8
 local RAID_PLACEMENT_TAB_INDEX = 9
 local RAID_FILL_TAB_INDEX = 10
+local IsPlayerInRaid = false
 
 local change_id = 0
 
@@ -697,6 +698,17 @@ function RaidOrganizer:OnInitialize() -- {{{
 
 	RaidOrganizerMinimapButton_OnInitialize()
 	
+	if not UnitInRaid('player') then
+		IsPlayerInRaid = false
+		if self:IsActive() then
+			self:ToggleActive()
+		end
+	else
+		IsPlayerInRaid = true
+		if not self:IsActive() then
+			self:ToggleActive()
+		end
+	end
 	if self:IsActive() then
 		self:OnEnable()
 	else
@@ -720,7 +732,7 @@ function RaidOrganizer:OnEnable() -- {{{
 	RaidOrganizerDialogBroadcastSync:Enable()
 	RaidOrganizerDialogBroadcastChannel:Enable()
 	RaidOrganizerDialogBroadcastRaid:Enable()
-	
+	SendAddonMessage("ROVersion", tostring(self.version), 'RAID', sender)
 	self:UpdateDialogValues()
 end -- }}}
 
@@ -729,6 +741,7 @@ function RaidOrganizer:OnDisable() -- {{{
 	RaidOrganizerMinimapButton:GetNormalTexture():SetDesaturated(true)
 	RaidOrganizerMinimapButton:GetPushedTexture():SetDesaturated(true)
 	self:UnregisterAllEvents();
+	self:RegisterEvent("RAID_ROSTER_UPDATE")
 	self:ResetData();
 	RaidOrganizerDialogEinteilungOptionenAutofill:Disable()
 	RaidOrganizerDialogBroadcastSync:Disable()
@@ -748,6 +761,9 @@ function RaidOrganizer:RefreshRaiderTable()
 			end
 		end
 	else
+		if self:IsActive() then
+			self:ToggleActive()
+		end
 		self:ResetData()
 	end
 end
@@ -1895,6 +1911,9 @@ function RaidOrganizer:ShowButtons()
 		if not RaidOrganizer.db.char.showBar then
 			RaidOrganizerButtonsHorizontal:Hide()
 		else
+			if not self:IsActive() then
+				self:ToggleActive()
+			end
 			RaidOrganizerButtonsHorizontal:Show()
 		end
 	else
@@ -1902,6 +1921,9 @@ function RaidOrganizer:ShowButtons()
 		if not RaidOrganizer.db.char.showBar then
 			RaidOrganizerButtonsVertical:Hide()
 		else
+			if not self:IsActive() then
+				self:ToggleActive()
+			end
 			RaidOrganizerButtonsVertical:Show()
 		end
 	end
@@ -1974,16 +1996,25 @@ end
 --      Event Handlers      --
 ------------------------------
 function RaidOrganizer:RAID_ROSTER_UPDATE()
-	self:RefreshRaiderTable()
-	if RaidOrganizerDialog:IsShown() then
-		self:UpdateDialogValues()
-	end
-	if (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
-		for tab = 1, SYNC_TAB_NB do
-			RaidOrganizer:RaidOrganizer_SendSync(tab);
+	if IsPlayerInRaid then 
+		self:RefreshRaiderTable()
+		if RaidOrganizerDialog:IsShown() then
+			self:UpdateDialogValues()
 		end
-	elseif not UnitInRaid('player') then
-		self:ResetData()
+		if not UnitInRaid('player') then
+			IsPlayerInRaid = false
+			if self:IsActive() then
+				self:ToggleActive()
+			end
+			self:ResetData()
+		elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
+			for tab = 1, SYNC_TAB_NB do
+				RaidOrganizer:RaidOrganizer_SendSync(tab);
+			end
+		end
+	else
+		IsPlayerInRaid = true
+		self:ToggleActive()
 	end
 end
 
@@ -1998,76 +2029,72 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if (prefix ~= "RaidOrganizer") then return end
 
 	if (type ~= "RAID") then return end
-	if UnitInRaid('player') then
-		local _, _, askPattern, tab_id = string.find(message, '(%a+)%s+(%d+)');
-		if (askPattern == "ONLOAD") then
-			if sender == UnitName('player') then
+	local _, _, askPattern, tab_id = string.find(message, '(%a+)%s+(%d+)');
+	if (askPattern == "ONLOAD") then
+		if sender == UnitName('player') then
+			return
+		elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
+			for tab = 1, SYNC_TAB_NB do
+				RaidOrganizer:RaidOrganizer_SendSync(tab);
+			end
+		end
+		return
+	elseif (askPattern == "VQUERY") then
+		SendAddonMessage("ROVersion", tostring(self.version), 'RAID', sender)
+		return
+	end
+	for i = 1, GetNumRaidMembers() do
+		local name, rank = GetRaidRosterInfo(i)
+		if name == sender then
+			if rank == 0 then	
 				return
-			elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
-				for tab = 1, SYNC_TAB_NB do
-					RaidOrganizer:RaidOrganizer_SendSync(tab);
-				end
-			end
-			return
-		elseif (askPattern == "VQUERY") then
-			SendAddonMessage("ROVersion", tostring(self.version), 'RAID', sender)
-			return
-		end
-		for i = 1, GetNumRaidMembers() do
-			local name, rank = GetRaidRosterInfo(i)
-			if name == sender then
-				if rank == 0 then	
-					return
-				else
-					break
-				end
+			else
+				break
 			end
 		end
-		if askPattern == "MANUAL" then
-			DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Syncing " .. RaidOrganizer_Tabs[tonumber(tab_id)][1] .. " assignment from " .. sender);
-			return
+	end
+	if askPattern == "MANUAL" then
+		DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Syncing " .. RaidOrganizer_Tabs[tonumber(tab_id)][1] .. " assignment from " .. sender);
+		return
+	end
+	local pattern = '(%d+)%s+(%d+)';
+	local _, _, tab_id, length  = string.find(message, pattern);
+	tab_id = tonumber(tab_id);
+	length = tonumber(length);
+	
+	if tab_id > SYNC_TAB_NB then
+		return
+	end
+	
+	if length == 0 then
+		RO_RaiderTable[tab_id] = {}; -- message to reset tab
+		return
+	end
+	
+	for i = 1, length do
+		pattern = pattern .. '%s+(%a+)%s+(%d+)';
+	end
+	local sync_raider_table  = {string.find(message, pattern)};
+	
+	local charName;
+	local charGroup;
+	local value;
+	for i = 1, length do
+		charName = sync_raider_table[3 + i * 2];
+		if not RO_RaiderTable[tab_id][charName] then
+			RO_RaiderTable[tab_id][charName] = {};
 		end
-		local pattern = '(%d+)%s+(%d+)';
-		local _, _, tab_id, length  = string.find(message, pattern);
-		tab_id = tonumber(tab_id);
-		length = tonumber(length);
 		
-		if tab_id > SYNC_TAB_NB then
-			return
-		end
-		
-		if length == 0 then
-			RO_RaiderTable[tab_id] = {}; -- message to reset tab
-			return
-		end
-		
-		for i = 1, length do
-			pattern = pattern .. '%s+(%a+)%s+(%d+)';
-		end
-		local sync_raider_table  = {string.find(message, pattern)};
-		
-		local charName;
-		local charGroup;
-		local value;
-		for i = 1, length do
-			charName = sync_raider_table[3 + i * 2];
-			if not RO_RaiderTable[tab_id][charName] then
-				RO_RaiderTable[tab_id][charName] = {};
+		for j = 1, string.len(sync_raider_table[4 + i * 2]) do
+			charGroup = tonumber(string.sub(sync_raider_table[4 + i * 2], j, j));
+			if charGroup > 1 and charGroup <= self.CONST.GROUPS[tab_id] then
+				RO_RaiderTable[tab_id][charName][charGroup + 1] = 1;
+				RO_RaiderTable[tab_id][charName][1] = nil;
 			end
-			
-			for j = 1, string.len(sync_raider_table[4 + i * 2]) do
-				charGroup = tonumber(string.sub(sync_raider_table[4 + i * 2], j, j));
-				if charGroup > 1 and charGroup <= self.CONST.GROUPS[tab_id] then
-					RO_RaiderTable[tab_id][charName][charGroup + 1] = 1;
-					RO_RaiderTable[tab_id][charName][1] = nil;
-				end
-			end
 		end
-		if RaidOrganizerDialog:IsShown() then
-			self:UpdateDialogValues()
-		end
-	else
-		self:ResetData()
+	end
+	if RaidOrganizerDialog:IsShown() then
+		self:UpdateDialogValues()
 	end
 end
 
