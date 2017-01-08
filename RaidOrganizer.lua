@@ -1573,10 +1573,21 @@ function RaidOrganizer:CHAT_MSG_WHISPER(msg, user) -- {{{
     if msg == "assign" then
         local reply = ""
 		local noassign = true
+		local first = true
 		for i=1, SYNC_TAB_NB do
+			first = true
         	if RO_RaiderTable[i][user] then
-            	reply = reply .. " " .. RaidOrganizer_Tabs[i][1] .. " " .. self:ReplaceTokens(grouplabels[RO_RaiderTable[i][user]])
-				noassign = false
+				for j=1, self.CONST.NUM_GROUPS[i] do
+					if RO_RaiderTable[i][user][j + 1] == 1 then
+						if first then
+							reply = reply .. " -*- " .. RaidOrganizer_Tabs[i][1] .. " " .. self.db.account.sets[i][RO_CurrentSet[i]].Beschriftungen[j]
+							first = false
+						else
+							reply = reply .. " " .. self.db.account.sets[i][RO_CurrentSet[i]].Beschriftungen[j]
+						end
+						noassign = false
+					end
+				end
 			end
 		end
 		if noassign then
