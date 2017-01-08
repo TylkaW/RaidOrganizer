@@ -2,7 +2,7 @@
 ## Title: Raid Organizer|cff7fff7f -Ace2-|r
 ## Notes: User friendly raid organizer
 ## Author: Tylka (based on Progman work)
-## Version: 0.9.8
+## Version: 0.9.9
 ## X-Category: Interface Enhancements
 
 ## OptionalDeps: Ace2 DewdropLib

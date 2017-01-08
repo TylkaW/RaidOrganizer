@@ -597,9 +597,6 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
 	if not RO_RaiderTable then
 		RO_RaiderTable = {}
-		for i = 1, TOTAL_TAB_NB do
-			table.insert(RO_RaiderTable, {})
-		end
 	else
 		self:RefreshRaiderTable()
 	end
