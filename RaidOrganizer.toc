@@ -20,7 +20,7 @@ Libs\AceConsole-2.0\AceConsole-2.0.lua
 Libs\AceEvent-2.0\AceEvent-2.0.lua
 Libs\AceLocale-2.1\AceLocale-2.1.lua
 Libs\ChatThrottleLib\ChatThrottleLib.lua
-Libs\DewdropLib\Dewdrop-2.0.lua
+Libs\Dewdrop\Dewdrop-2.0.lua
 
 RaidOrganizer-deDE.lua
 RaidOrganizer-enUS.lua
