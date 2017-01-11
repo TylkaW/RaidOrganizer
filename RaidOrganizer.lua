@@ -1,121 +1,6 @@
 local L = AceLibrary("AceLocale-2.1"):GetInstance("RaidOrganizer", true)
 local dewdrop = AceLibrary("Dewdrop-2.0")
 
-local options = {
-    type = 'group',
-    args = {
-		barDisplay = {
-			type = 'group',
-			name = 'Bar options',
-			desc = 'Shortcut button bar display options',
-			args = {
-				horizontal = {
-				type = 'toggle',
-				name = 'Horizontal',
-				desc = 'Show buttons horizontally or vertically',
-				get = function() return RaidOrganizer.db.char.horizontal end,
-				set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
-				},
-				scale = {
-					type = 'range',
-					name = "Scale",
-					desc = "Shortcut button bar scale",
-					get = function() return RaidOrganizer.db.char.scale end,
-					set = function(v)
-						RaidOrganizer.db.char.scale = v
-						RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
-						RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
-					end,
-					min = 0.5,
-					max = 2,
-					step = 0.01,
-					order = 2
-				},
-			}
-		},
-        showBar = {
-			type = 'toggle',
-			name = 'Show bar',
-			desc = 'Show/Hide shortcut button bar',
-			get = function() return RaidOrganizer.db.char.showBar end,
-			set = function() RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar; RaidOrganizer:ShowButtons() end,
-				
-        },
-		showDialog = {
-            type = 'execute',
-            name = 'Show Dialog',
-            desc = L["SHOW_DIALOG"],
-            func = function() RaidOrganizer:Dialog() end,
-        },
-		minimap = {
-			type = "group",
-			name = 'Minimap',
-			desc = 'Minimap button options',
-			args = {
-				showMinimap = {
-					type = 'toggle',
-					name = 'Show',
-					desc = 'Show/Hide minimap button',
-					get = function() return RaidOrganizer.db.char.showMinimap end,
-					set = function() RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end end,
-				},
-				lockMinimap = {
-					type = 'toggle',
-					name = 'Lock',
-					desc = 'Lock Minimap button',
-					get = function() return RaidOrganizer.db.char.lockMinimap end,
-					set = function() RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap end,
-				},
-				minimapPosition = {
-					type = 'group',
-					name = 'Position',
-					desc = 'Minimap button position',
-					args = {
-						minimapPositionX = {
-							type = 'range',
-							name = "x",
-							desc = "Minimap button angle",
-							get = function() return RaidOrganizer.db.char.minimapPositionX end,
-							set = function(v)
-								RaidOrganizer.db.char.minimapPositionX = v
-								RaidOrganizer_Minimap_Position(v, RaidOrganizer.db.char.minimapPositionY)
-							end,
-							min = 0,
-							max = 360,
-							step = 0.5,
-							order = 2
-						},
-						minimapPositionY = {
-							type = 'range',
-							name = "y",
-							desc = "Minimap button position",
-							get = function() return RaidOrganizer.db.char.minimapPositionY end,
-							set = function(v)
-								RaidOrganizer.db.char.minimapPositionY = v
-								RaidOrganizer_Minimap_Position(RaidOrganizer.db.char.minimapPositionX, v)
-							end,
-							min = -30,
-							max = 30,
-							step = 0.5,
-							order = 2
-						},
-					}
-				},
-			}
-		},
-		versionQuery = {
-			type = "toggle",
-			name = 'Check version',
-			desc = 'Query raid member RaidOrganizer version',
-			get = function() return RaidOrganizer.b_versionQuery end,
-			set = function() RaidOrganizer.b_versionQuery = not RaidOrganizer.b_versionQuery; if RaidOrganizer.b_versionQuery then if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else RaidOrganizer.b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to check raid version"); end end end,
-			disabled = function() return not RaidOrganizer:IsActive() end,
-		},
-    }
-}
--- units
-
-
 -- name2unitid
 local unitids = {
 }
@@ -128,58 +13,16 @@ local lastAction = {
 }
 
 local moreThan24Display = false
-local einteilung = {
-	[1] = {},
-	[2] = {},
-	[3] = {},
-	[4] = {},
-	[5] = {},
-	[6] = {},
-	[7] = {},
-	[8] = {},
-	[9] = {},
-	[10] = {},
-}
-local stats = {
-	DRUID = 0,
-	PRIEST = 0,
-	PALADIN = 0,
-	SHAMAN = 0,
-	WARRIOR = 0,
-	ROGUE = 0,
-	MAGE = 0,
-	WARLOCK = 0,
-	HUNTER = 0,
-}
+local einteilung = {{}, {}, {}, {}, {}, {}, {}, {}, {}, {},}
+local stats = {DRUID = 0, PRIEST = 0, PALADIN = 0, SHAMAN = 0, WARRIOR = 0, ROGUE = 0, MAGE = 0, WARLOCK = 0, HUNTER = 0,}
 
 local groupByName = {}
 
-local grouplabels = {
-    Rest = "GROUP_LOCALE_REMAINS",
-    [1] = "GROUP_LOCALE_1",
-    [2] = "GROUP_LOCALE_2",
-    [3] = "GROUP_LOCALE_3",
-    [4] = "GROUP_LOCALE_4",
-    [5] = "GROUP_LOCALE_5",
-    [6] = "GROUP_LOCALE_6",
-    [7] = "GROUP_LOCALE_7",
-    [8] = "GROUP_LOCALE_8",
-    [9] = "GROUP_LOCALE_9",
-}
+local grouplabels = {Rest = "GROUP_LOCALE_REMAINS", [1] = "GROUP_LOCALE_1", [2] = "GROUP_LOCALE_2", [3] = "GROUP_LOCALE_3", [4] = "GROUP_LOCALE_4", [5] = "GROUP_LOCALE_5", [6] = "GROUP_LOCALE_6", [7] = "GROUP_LOCALE_7", [8] = "GROUP_LOCALE_8", [9] = "GROUP_LOCALE_9",}
 
 local MAX_GROUP_NB = 9
 
-local groupclasses = {
-    [1] = {},
-    [2] = {},
-    [3] = {},
-    [4] = {},
-    [5] = {},
-    [6] = {},
-    [7] = {},
-    [8] = {},
-    [9] = {},
-}
+local groupclasses = { {}, {}, {}, {}, {}, {}, {}, {}, {} }
 
 local classTab = {}
 
@@ -233,17 +76,67 @@ local tempsetup = {}
 BINDING_HEADER_RaidOrganizer = "Raid Organizer"
 BINDING_NAME_SHOW_RaidOrganizer = L["SHOW_DIALOG"]
 
-RaidOrganizer = AceLibrary("AceAddon-2.0"):new("AceConsole-2.0", "AceDebug-2.0", "AceDB-2.0", "AceEvent-2.0")
-RaidOrganizer:RegisterChatCommand({"/RaidOrganizer", "/raidorg", "/ro"}, options)
+RaidOrganizer = AceLibrary("AceAddon-2.0"):new("AceConsole-2.0", "AceDebug-2.0", "AceDB-2.0", "AceEvent-2.0", "AceModuleCore-2.0")
 RaidOrganizer:RegisterDB("RaidOrganizerDB", "RaidOrganizerDBPerChar")
+RaidOrganizer.options = {
+    type = 'group',
+    args = {
+		barDisplay = {
+			type = 'group',
+			name = 'Bar options',
+			desc = 'Shortcut button bar display options',
+			args = {
+				horizontal = {
+				type = 'toggle',
+				name = 'Horizontal',
+				desc = 'Show buttons horizontally or vertically',
+				get = function() return RaidOrganizer.db.char.horizontal end,
+				set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
+				},
+				scale = {
+					type = 'range',
+					name = "Scale",
+					desc = "Shortcut button bar scale",
+					get = function() return RaidOrganizer.db.char.scale end,
+					set = function(v)
+						RaidOrganizer.db.char.scale = v
+						RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
+						RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
+					end,
+					min = 0.5,
+					max = 2,
+					step = 0.01,
+					order = 2
+				},
+			}
+		},
+        showBar = {
+			type = 'execute',
+			name = 'Show Bar',
+			desc = 'Show/Hide shortcut button bar',
+			func = function() RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar; RaidOrganizer:ShowButtons() end,
+				
+        },
+		showDialog = {
+            type = 'execute',
+            name = 'Show Dialog',
+            desc = L["SHOW_DIALOG"],
+            func = function() RaidOrganizer:Dialog() end,
+        },
+		versionQuery = {
+			type = "execute",
+			name = 'Check version',
+			desc = 'Query raid member RaidOrganizer version',
+			func = function() RaidOrganizer.b_versionQuery = true; if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else RaidOrganizer.b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to check raid version"); end end,
+			disabled = function() return not RaidOrganizer:IsActive() end,
+		},
+    }
+}
+RaidOrganizer:RegisterChatCommand({"/RaidOrganizer", "/raidorg", "/ro"}, RaidOrganizer.options)
 RaidOrganizer:RegisterDefaults('char', {
 	chan = "",
 	showBar = true,
 	horizontal = false,
-	lockMinimap = false,
-	showMinimap = true,
-	minimapPositionX = 0,
-	minimapPositionY = 0,
 	scale = 1.0
 })
 
@@ -693,7 +586,7 @@ function RaidOrganizer:OnInitialize() -- {{{
 	if not self.version then self.version = GetAddOnMetadata("RaidOrganizer", "Version") end
 	RaidOrganizer.RO_version_table = {}
 
-	RaidOrganizerMinimapButton_OnInitialize()
+	-- RaidOrganizerMinimapButton_OnInitialize()
 	
 	if not UnitInRaid('player') then
 		IsPlayerInRaid = false
@@ -720,8 +613,6 @@ end -- }}}
 
 function RaidOrganizer:OnEnable() -- {{{
     -- Called when the addon is enabled
-	RaidOrganizerMinimapButton:GetNormalTexture():SetDesaturated(false)
-	RaidOrganizerMinimapButton:GetPushedTexture():SetDesaturated(false)
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("CHAT_MSG_ADDON")
 	self:RegisterEvent("RAID_ROSTER_UPDATE")
@@ -731,12 +622,11 @@ function RaidOrganizer:OnEnable() -- {{{
 	RaidOrganizerDialogBroadcastRaid:Enable()
 	SendAddonMessage("ROVersion", tostring(self.version), 'RAID', sender)
 	self:UpdateDialogValues()
+	self:TriggerEvent("RaidOrganizer_Enabled")
 end -- }}}
 
 function RaidOrganizer:OnDisable() -- {{{
     -- Called when the addon is disabled
-	RaidOrganizerMinimapButton:GetNormalTexture():SetDesaturated(true)
-	RaidOrganizerMinimapButton:GetPushedTexture():SetDesaturated(true)
 	self:UnregisterAllEvents();
 	self:RegisterEvent("RAID_ROSTER_UPDATE")
 	self:ResetData();
@@ -744,6 +634,7 @@ function RaidOrganizer:OnDisable() -- {{{
 	RaidOrganizerDialogBroadcastSync:Disable()
 	RaidOrganizerDialogBroadcastChannel:Disable()
 	RaidOrganizerDialogBroadcastRaid:Disable()
+	self:TriggerEvent("RaidOrganizer_Disabled")
 end -- }}}
 
 function RaidOrganizer:RefreshRaiderTable()
@@ -2296,128 +2187,63 @@ function RaidOrganizer:RaidOrganizer_SendSync(id)
 	end
 end
 
-function RaidOrganizer_Minimap_OnEnter()
-	GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT");
-	GameTooltip:AddLine("Raid Organizer " .. RaidOrganizer.version);
-	GameTooltip:AddLine("Left click to show/hide bar", 0,1,0);
-	GameTooltip:AddLine("Right click to show options", 0,1,0);
-	GameTooltip:AddLine("Left click and drag to move", 0,1,0);
-	local str1, str2 = "", "";
-	local color1, color2 = {1,1,1}, {1,1,1};
-	local tmpstr = "";
-	local tmpcolor = {1,1,1}
-	if (IsRaidLeader() or IsRaidOfficer()) and RaidOrganizer.b_versionQuery then
-		GameTooltip:AddLine(" ", 0,0,0);
-		GameTooltip:AddLine("Version Query :");
-		local charName = ""
-		local charVersion = ""
-		for i=1, MAX_RAID_MEMBERS do
-			charName = ""
-			charVersion = ""
-			if UnitExists("raid"..i) then
-				for key,value in pairs(RaidOrganizer.RO_version_table) do
-					if key == UnitName("raid"..i) then
-						charName = key
-						charVersion = value
-						break
+function RaidOrganizer:TooltipUpdate(tablet)
+	tablet:SetTitle("Raid Organizer |cff00ff00v" .. RaidOrganizer.version .. "|r")
+	if RaidOrganizer:IsActive() then
+		if (IsRaidLeader() or IsRaidOfficer()) and RaidOrganizer.b_versionQuery then
+			local cat = tablet:AddCategory(
+				'columns', 2,
+				'child_textR', 1, 'child_textG', 0.82, 'child_textB', 0,
+				'child_text2R', 1, 'child_text2G', 1, 'child_text2B', 1
+			)
+			local str1, str2 = "", "";
+			local color1, color2 = "ffffffff", "ffffffff";
+			local tmpstr = "";
+			local tmpcolor = "ffffffff"
+			
+			cat:AddLine("text", " ");
+			cat:AddLine("text", "|c" .. tmpcolor .. "Version Query :" .. "|r", 'size', 14);
+			cat:AddLine("text", " ");
+			local charName = ""
+			local charVersion = ""
+			for i=1, MAX_RAID_MEMBERS do
+				charName = ""
+				charVersion = ""
+				if UnitExists("raid"..i) then
+					for key,value in pairs(RaidOrganizer.RO_version_table) do
+						if key == UnitName("raid"..i) then
+							charName = key
+							charVersion = value
+							break
+						end
 					end
-				end
-				if charName ~= "" then
-					tmpstr = charName .. " " .. charVersion;
-					if charVersion == RaidOrganizer.version then
-						tmpcolor = {1,1,1}
-					elseif charVersion < RaidOrganizer.version then
-						tmpcolor = {1,0.5,0}
+					if charName ~= "" then
+						tmpstr = charName .. " " .. charVersion;
+						if charVersion == RaidOrganizer.version then
+							tmpcolor = "ffffffff"
+						elseif charVersion < RaidOrganizer.version then
+							tmpcolor = "ffff8000"
+						else
+							tmpcolor = "ff00ff00"
+						end
 					else
-						tmpcolor = {0,1,0}
+						if UnitIsConnected("raid"..i) then
+							tmpstr = UnitName("raid"..i) .. " N/A";
+							tmpcolor = "ffff0000"
+						else
+							tmpstr = UnitName("raid"..i) .. " offline";
+							tmpcolor = "ff808080"
+						end
 					end
-				else
-					if UnitIsConnected("raid"..i) then
-						tmpstr = UnitName("raid"..i) .. " N/A";
-						tmpcolor = {1,0,0}
-					else
-						tmpstr = UnitName("raid"..i) .. " offline";
-						tmpcolor = {0.5,0.5,0.5}
-					end
+					if str1 == "" then str1 = tmpstr; color1 = tmpcolor; else str2 = tmpstr; color2 = tmpcolor end
+					if str2 ~= "" then cat:AddLine("text", "|c" .. color1 .. str1 .. "|r","text2", "|c" .. color2 .. str2 .. "|r"); str1 = ""; str2 = ""; end
 				end
-				if str1 == "" then str1 = tmpstr; color1 = tmpcolor; else str2 = tmpstr; color2 = tmpcolor end
-				if str2 ~= "" then GameTooltip:AddDoubleLine(str1, str2, color1[1], color1[2], color1[3], color2[1], color2[2], color2[3]); str1 = ""; str2 = ""; end
 			end
-		end
-		if str1 ~= "" then GameTooltip:AddDoubleLine(str1, "", color1[1], color1[2], color1[3], color2[1], color2[2], color2[3]); str1 = ""; str2 = ""; end
-	end
-	GameTooltip:Show();
-end
-
-function RaidOrganizer_Minimap_Position(x,y)
-	if ( x or y ) then
-		if ( x ) then if ( x < 0 ) then x = x + 360; end RaidOrganizer.db.char.minimapPositionX = x; end
-		if ( y ) then RaidOrganizer.db.char.minimapPositionY = y; end
-	end
-	x, y = RaidOrganizer.db.char.minimapPositionX, RaidOrganizer.db.char.minimapPositionY
-
-	RaidOrganizerMinimapButton:SetPoint("TOPLEFT","Minimap","TOPLEFT",53-((80+(y))*cos(x)),((80+(y))*sin(x))-55);
-end
-
-function RaidOrganizer_Minimap_DragStart()
-	if RaidOrganizer.db.char.lockMinimap then 
-		return 
-	end
-	this:SetScript("OnUpdate", RaidOrganizer_Minimap_DragUpdate);
-end
-function RaidOrganizer_Minimap_DragStop()
-	RaidOrganizerMinimapButton:UnlockHighlight()
-	this:SetScript("OnUpdate", nil);
-end
-function RaidOrganizer_Minimap_DragUpdate()
-	RaidOrganizerMinimapButton:LockHighlight();
-	local curX, curY = GetCursorPosition();
-	local mapX, mapY = Minimap:GetCenter();
-	local x, y;
-	if ( IsShiftKeyDown() ) then
-		y = math.pow( math.pow(curY - mapY * Minimap:GetEffectiveScale(), 2) + math.pow(mapX * Minimap:GetEffectiveScale() - curX, 2), 0.5) - 70;
-		y = min( max( y, -30 ), 30 );
-	end
-	x = math.deg(math.atan2( curY - mapY * Minimap:GetEffectiveScale(), mapX * Minimap:GetEffectiveScale() - curX ));
-
-	RaidOrganizer_Minimap_Position(x,y);
-end
-
-function RaidOrganizer_Minimap_Update()
-	if ( RaidOrganizer.db.char.showMinimap ) then
-		RaidOrganizerMinimapButton:Hide();
-	else
-		RaidOrganizerMinimapButton:Show();
-		RaidOrganizer_Minimap_Position();
-	end
-end
-
-function RaidOrganizer_Minimap_OnClick(arg1)
-	if arg1 == "LeftButton" then
-		if not RaidOrganizer:IsActive() then
-			RaidOrganizer:ToggleActive()
-			if not RaidOrganizer.db.char.showBar then
-				RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
-				RaidOrganizer:ShowButtons()
-			end
-		else
-			RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
-			RaidOrganizer:ShowButtons()
+			if str1 ~= "" then cat:AddLine("text", "|c" .. color1 .. str1 .. "|r"); str1 = ""; str2 = ""; end
 		end
 	else
-		dewdrop:Open(RaidOrganizerMinimapButton)
-	end
-end
-
-function RaidOrganizerMinimapButton_OnInitialize()
-	dewdrop:Register(RaidOrganizerMinimapButton, 'children', function() dewdrop:FeedAceOptionsTable(options) end)
-
-	RaidOrganizerMinimapButton:SetNormalTexture("Interface\\Icons\\Inv_misc_head_dragon_black")
-	RaidOrganizerMinimapButton:SetPushedTexture("Interface\\Icons\\Inv_misc_head_dragon_black")
-
-	RaidOrganizer_Minimap_Position(nil, nil)
-	
-	if RaidOrganizer.db.char.showMinimap then
-		RaidOrganizerMinimapButton:Show()
+		local cat = tablet:AddCategory("colums", 1)
+		cat:AddLine("text", "Raid Organizer is currently disabled.")
+		tablet:SetHint("|cffeda55fClick|r to enable.")
 	end
 end

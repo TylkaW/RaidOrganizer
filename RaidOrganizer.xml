@@ -1831,7 +1831,7 @@
             <!-- }}} -->
         </Frames>
     </Frame>
-	<Button name="RaidOrganizerMinimapButton" parent="Minimap" enableMouse="true" hidden="true" frameStrata="MEDIUM">
+	<!-- <Button name="RaidOrganizerMinimapButton" parent="Minimap" enableMouse="true" hidden="true" frameStrata="MEDIUM">
 		<Size>
 			<AbsDimension x="32" y="32"/>
 		</Size>
@@ -1907,6 +1907,6 @@
 				RaidOrganizer_Minimap_DragStop();
 			</OnMouseUp>
 		</Scripts>
-	</Button>
+	</Button> -->
     <!-- }}} -->
 </Ui>
