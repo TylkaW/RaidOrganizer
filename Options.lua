@@ -35,6 +35,7 @@ RaidOrganizerOptions:RegisterDB("RaidOrganizerFubarDB")
 
 RaidOrganizerOptions.hasNoColor = true
 RaidOrganizerOptions.hasIcon = "nterface\\AddOns\\RaidOrganizer\\Textures\\Icons\\INV_Misc_Head_Dragon_Black_Enable.tga"
+RaidOrganizerOptions.lockMinimap = true
 RaidOrganizerOptions.defaultMinimapPosition = 180
 RaidOrganizerOptions.clickableTooltip = true
 RaidOrganizerOptions.hideWithoutStandby = true
@@ -58,9 +59,9 @@ end
 
 function RaidOrganizerOptions:OnStateChange()
 	if RaidOrganizer:IsActive() then
-		self:SetIcon("Interface\\AddOns\\RaidOrganizer\\Textures\\Icons\\INV_Misc_Head_Dragon_Black_Enable.tga")
+		self:SetIcon("Interface\\AddOns\\RaidOrganizer\\Textures\\Icons\\Ruins_icon_enable.tga")
 	else
-		self:SetIcon("Interface\\AddOns\\RaidOrganizer\\Textures\\Icons\\INV_Misc_Head_Dragon_Black_Disable.tga")
+		self:SetIcon("Interface\\AddOns\\RaidOrganizer\\Textures\\Icons\\Ruins_icon_disable.tga")
 	end
 	self:UpdateTooltip()
 end
