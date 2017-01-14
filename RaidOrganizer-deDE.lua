@@ -68,10 +68,10 @@ AceLocale:RegisterTranslation("RaidOrganizer", "deDE", function()
         ["SET_TO_MANY_SETS"] = "Sie k\195\182nnen nicht mehr als 32 Sets haben",
         ["AUTOSORT_DESC"] = "Automatische Sortierung f\195\188r die Gruppen",
         ["REPLY_NO_ARRANGEMENT"] = "Du bist f\195\188 nichts eingeteilt worden",
-        ["REPLY_ARRANGEMENT_FOR"] = "Du bist f\195\188r %s eingeteilt",
+        ["REPLY_ARRANGEMENT_FOR"] = "Du bist f\195\188r eingeteilt",
         ["AUTOFILL"] = "Autofill",
         ["MSG_HEAL_FOR_ARRANGEMENT"] = "Fl\195\188stert 'assign' f\195\188r deine Heilereinteilung.",
         ["WHISPER"] = "Einteilungen fl\195\188stern",
-        ["ARRANGEMENT_FOR"] = "Du bist f\195\188r folgendes eingeteilt: %s",
+        ["ARRANGEMENT_FOR"] = "Du bist f\195\188r folgendes eingeteilt:",
     }
 end)

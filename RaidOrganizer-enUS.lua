@@ -1,6 +1,12 @@
 -- By Zisu (http://www.curse-gaming.com/en/profile-122056.html)
 local AceLocale = AceLibrary("AceLocale-2.1")
 
+AceLocale:RegisterTranslation("RaidOrganizerOptions", "enUS", function()
+    return {
+		["AA"] = "GG"
+	}
+end)
+
 AceLocale:RegisterTranslation("RaidOrganizer", "enUS", function()
     return {
         ["CLOSE"] = "Close",
@@ -69,10 +75,10 @@ AceLocale:RegisterTranslation("RaidOrganizer", "enUS", function()
         ["SET_TO_MANY_SETS"] = "You cannot have more than 32 sets",
         ["AUTOSORT_DESC"] = "Autosort for groups",
         ["REPLY_NO_ARRANGEMENT"] = "You weren't assigned",
-        ["REPLY_ARRANGEMENT_FOR"] = "You are assigned to %s",
+        ["REPLY_ARRANGEMENT_FOR"] = "You are assigned to",
         ["AUTOFILL"] = "Autofill",
         ["MSG_HEAL_FOR_ARRANGEMENT"] = "Whisper 'assign' for your assignment.",
         ["WHISPER"] = "Whisper healers their assignment",
-        ["ARRANGEMENT_FOR"] = "Your arrangement: %s",
+        ["ARRANGEMENT_FOR"] = "Your arrangement:",
     }
 end)

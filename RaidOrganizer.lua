@@ -1,121 +1,6 @@
 local L = AceLibrary("AceLocale-2.1"):GetInstance("RaidOrganizer", true)
 local dewdrop = AceLibrary("Dewdrop-2.0")
 
-local options = {
-    type = 'group',
-    args = {
-		barDisplay = {
-			type = 'group',
-			name = 'Bar options',
-			desc = 'Shortcut button bar display options',
-			args = {
-				horizontal = {
-				type = 'toggle',
-				name = 'Horizontal',
-				desc = 'Show buttons horizontally or vertically',
-				get = function() return RaidOrganizer.db.char.horizontal end,
-				set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
-				},
-				scale = {
-					type = 'range',
-					name = "Scale",
-					desc = "Shortcut button bar scale",
-					get = function() return RaidOrganizer.db.char.scale end,
-					set = function(v)
-						RaidOrganizer.db.char.scale = v
-						RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
-						RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
-					end,
-					min = 0.5,
-					max = 2,
-					step = 0.01,
-					order = 2
-				},
-			}
-		},
-        showBar = {
-			type = 'toggle',
-			name = 'Show bar',
-			desc = 'Show/Hide shortcut button bar',
-			get = function() return RaidOrganizer.db.char.showBar end,
-			set = function() RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar; RaidOrganizer:ShowButtons() end,
-				
-        },
-		showDialog = {
-            type = 'execute',
-            name = 'Show Dialog',
-            desc = L["SHOW_DIALOG"],
-            func = function() RaidOrganizer:Dialog() end,
-        },
-		minimap = {
-			type = "group",
-			name = 'Minimap',
-			desc = 'Minimap button options',
-			args = {
-				showMinimap = {
-					type = 'toggle',
-					name = 'Show',
-					desc = 'Show/Hide minimap button',
-					get = function() return RaidOrganizer.db.char.showMinimap end,
-					set = function() RaidOrganizer.db.char.showMinimap = not RaidOrganizer.db.char.showMinimap; if RaidOrganizer.db.char.showMinimap then RaidOrganizerMinimapButton:Show(); else RaidOrganizerMinimapButton:Hide(); end end,
-				},
-				lockMinimap = {
-					type = 'toggle',
-					name = 'Lock',
-					desc = 'Lock Minimap button',
-					get = function() return RaidOrganizer.db.char.lockMinimap end,
-					set = function() RaidOrganizer.db.char.lockMinimap = not RaidOrganizer.db.char.lockMinimap end,
-				},
-				minimapPosition = {
-					type = 'group',
-					name = 'Position',
-					desc = 'Minimap button position',
-					args = {
-						minimapPositionX = {
-							type = 'range',
-							name = "x",
-							desc = "Minimap button angle",
-							get = function() return RaidOrganizer.db.char.minimapPositionX end,
-							set = function(v)
-								RaidOrganizer.db.char.minimapPositionX = v
-								RaidOrganizer_Minimap_Position(v, RaidOrganizer.db.char.minimapPositionY)
-							end,
-							min = 0,
-							max = 360,
-							step = 0.5,
-							order = 2
-						},
-						minimapPositionY = {
-							type = 'range',
-							name = "y",
-							desc = "Minimap button position",
-							get = function() return RaidOrganizer.db.char.minimapPositionY end,
-							set = function(v)
-								RaidOrganizer.db.char.minimapPositionY = v
-								RaidOrganizer_Minimap_Position(RaidOrganizer.db.char.minimapPositionX, v)
-							end,
-							min = -30,
-							max = 30,
-							step = 0.5,
-							order = 2
-						},
-					}
-				},
-			}
-		},
-		versionQuery = {
-			type = "toggle",
-			name = 'Check version',
-			desc = 'Query raid member RaidOrganizer version',
-			get = function() return RaidOrganizer.b_versionQuery end,
-			set = function() RaidOrganizer.b_versionQuery = not RaidOrganizer.b_versionQuery; if RaidOrganizer.b_versionQuery then if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else RaidOrganizer.b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to check raid version"); end end end,
-			disabled = function() return not RaidOrganizer:IsActive() end,
-		},
-    }
-}
--- units
-
-
 -- name2unitid
 local unitids = {
 }
@@ -128,58 +13,17 @@ local lastAction = {
 }
 
 local moreThan24Display = false
-local einteilung = {
-	[1] = {},
-	[2] = {},
-	[3] = {},
-	[4] = {},
-	[5] = {},
-	[6] = {},
-	[7] = {},
-	[8] = {},
-	[9] = {},
-	[10] = {},
-}
-local stats = {
-	DRUID = 0,
-	PRIEST = 0,
-	PALADIN = 0,
-	SHAMAN = 0,
-	WARRIOR = 0,
-	ROGUE = 0,
-	MAGE = 0,
-	WARLOCK = 0,
-	HUNTER = 0,
-}
+local einteilung = {{}, {}, {}, {}, {}, {}, {}, {}, {}, {},}
+local stats = {DRUID = 0, PRIEST = 0, PALADIN = 0, SHAMAN = 0, WARRIOR = 0, ROGUE = 0, MAGE = 0, WARLOCK = 0, HUNTER = 0,}
 
 local groupByName = {}
 
-local grouplabels = {
-    Rest = "GROUP_LOCALE_REMAINS",
-    [1] = "GROUP_LOCALE_1",
-    [2] = "GROUP_LOCALE_2",
-    [3] = "GROUP_LOCALE_3",
-    [4] = "GROUP_LOCALE_4",
-    [5] = "GROUP_LOCALE_5",
-    [6] = "GROUP_LOCALE_6",
-    [7] = "GROUP_LOCALE_7",
-    [8] = "GROUP_LOCALE_8",
-    [9] = "GROUP_LOCALE_9",
-}
+local grouplabels = {Rest = "GROUP_LOCALE_REMAINS", [1] = "GROUP_LOCALE_1", [2] = "GROUP_LOCALE_2", [3] = "GROUP_LOCALE_3", [4] = "GROUP_LOCALE_4", [5] = "GROUP_LOCALE_5", [6] = "GROUP_LOCALE_6", [7] = "GROUP_LOCALE_7", [8] = "GROUP_LOCALE_8", [9] = "GROUP_LOCALE_9",}
 
 local MAX_GROUP_NB = 9
 
-local groupclasses = {
-    [1] = {},
-    [2] = {},
-    [3] = {},
-    [4] = {},
-    [5] = {},
-    [6] = {},
-    [7] = {},
-    [8] = {},
-    [9] = {},
-}
+local groupclasses = { {}, {}, {}, {}, {}, {}, {}, {}, {} }
+local isSync = {false, false, false, false, false, false, false, false, false}
 
 local classTab = {}
 
@@ -233,17 +77,67 @@ local tempsetup = {}
 BINDING_HEADER_RaidOrganizer = "Raid Organizer"
 BINDING_NAME_SHOW_RaidOrganizer = L["SHOW_DIALOG"]
 
-RaidOrganizer = AceLibrary("AceAddon-2.0"):new("AceConsole-2.0", "AceDebug-2.0", "AceDB-2.0", "AceEvent-2.0")
-RaidOrganizer:RegisterChatCommand({"/RaidOrganizer", "/raidorg", "/ro"}, options)
+RaidOrganizer = AceLibrary("AceAddon-2.0"):new("AceConsole-2.0", "AceDebug-2.0", "AceDB-2.0", "AceEvent-2.0", "AceModuleCore-2.0")
 RaidOrganizer:RegisterDB("RaidOrganizerDB", "RaidOrganizerDBPerChar")
+RaidOrganizer.options = {
+    type = 'group',
+    args = {
+		barDisplay = {
+			type = 'group',
+			name = 'Bar options',
+			desc = 'Shortcut button bar display options',
+			args = {
+				horizontal = {
+				type = 'toggle',
+				name = 'Horizontal',
+				desc = 'Show buttons horizontally or vertically',
+				get = function() return RaidOrganizer.db.char.horizontal end,
+				set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
+				},
+				scale = {
+					type = 'range',
+					name = "Scale",
+					desc = "Shortcut button bar scale",
+					get = function() return RaidOrganizer.db.char.scale end,
+					set = function(v)
+						RaidOrganizer.db.char.scale = v
+						RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
+						RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
+					end,
+					min = 0.5,
+					max = 2,
+					step = 0.01,
+					order = 2
+				},
+			}
+		},
+        showBar = {
+			type = 'execute',
+			name = 'Show Bar',
+			desc = 'Show/Hide shortcut button bar',
+			func = function() RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar; RaidOrganizer:ShowButtons() end,
+				
+        },
+		showDialog = {
+            type = 'execute',
+            name = 'Show Dialog',
+            desc = L["SHOW_DIALOG"],
+            func = function() RaidOrganizer:Dialog() end,
+        },
+		versionQuery = {
+			type = "execute",
+			name = 'Check version',
+			desc = 'Query raid member RaidOrganizer version',
+			func = function() RaidOrganizer.b_versionQuery = true; if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else RaidOrganizer.b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to check raid version"); end end,
+			disabled = function() return not RaidOrganizer:IsActive() end,
+		},
+    }
+}
+RaidOrganizer:RegisterChatCommand({"/RaidOrganizer", "/raidorg", "/ro"}, RaidOrganizer.options)
 RaidOrganizer:RegisterDefaults('char', {
 	chan = "",
 	showBar = true,
 	horizontal = false,
-	lockMinimap = false,
-	showMinimap = true,
-	minimapPositionX = 0,
-	minimapPositionY = 0,
 	scale = 1.0
 })
 
@@ -251,281 +145,81 @@ RaidOrganizer:RegisterDefaults('account', {
     sets = { {
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "MT1",
-                [2] = "MT2",
-                [3] = "MT3",
-                [4] = "MT4",
-                [5] = "MT5",
-                [6] = L["DISPEL"],
-                [7] = "",
-                [8] = "",
-                [9] = "",
-            },
-            Restaktion = "ffa",
-            Klassengruppen = {
-                [1] = {},
-                [2] = {},
-                [3] = {},
-                [4] = {},
-                [5] = {},
-                [6] = {},
-                [7] = {},
-                [8] = {},
-                [9] = {},
-            }
+            GroupNames = {"MT1", "MT2","MT3","MT4","MT5",L["DISPEL"],"", "", "", },
+            Remaining = "ffa",
+            GroupClasses = { {}, {}, {}, {}, {}, {}, {}, {}, {} }
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "SKULL",
-                [2] = "CROSS",
-                [3] = "SQUARE",
-                [4] = "MOON",
-                [5] = "TRIANGLE",
-                [6] = "DIAMOND",
-                [7] = "CIRCLE",
-                [8] = "STAR",
-		[9] = "",
-            },
-            Restaktion = "Nightfall",
-            Klassengruppen = {
-                [1] = {},
-                [2] = {},
-                [3] = {},
-                [4] = {},
-                [5] = {},
-                [6] = {},
-                [7] = {},
-                [8] = {},
-		[9] = {},
-            }
+            GroupNames = {"SKULL","CROSS","SQUARE","MOON","TRIANGLE","DIAMOND","CIRCLE","STAR","",},
+            Remaining = "Nightfall",
+            GroupClasses = {{},{},{},{},{},{},{},{},{},}
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "SKULL",
-                [2] = "CROSS",
-                [3] = "SQUARE",
-                [4] = "MOON",
-                [5] = "TRIANGLE",
-                [6] = "DIAMOND",
-                [7] = "CIRCLE",
-                [8] = "STAR",
-		[9] = "",
-            },
-            Restaktion = "DPS",
-            Klassengruppen = {
-                [1] = {},
-                [2] = {},
-                [3] = {},
-                [4] = {},
-                [5] = {},
-                [6] = {},
-                [7] = {},
-                [8] = {},
-		[9] = {},
-            }
+            GroupNames = {"SKULL","CROSS","SQUARE","MOON","TRIANGLE","DIAMOND","CIRCLE","STAR","",},
+            Remaining = "DPS",
+            GroupClasses = {{},{},{},{},{},{},{},{},{},}
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-		[1] = "SKULL",
-                [2] = "CROSS",
-                [3] = "SQUARE",
-                [4] = "MOON",
-                [5] = "TRIANGLE",
-                [6] = "DIAMOND",
-                [7] = "CIRCLE",
-                [8] = "STAR",
-		[9] = "",
-            },
-            Restaktion = "",
-            Klassengruppen = {
-                [1] = {},
-                [2] = {},
-                [3] = {},
-                [4] = {},
-                [5] = {},
-                [6] = {},
-                [7] = {},
-                [8] = {},
-		[9] = {},
-            }
+            GroupNames = {"SKULL","CROSS","SQUARE","MOON","TRIANGLE","DIAMOND","CIRCLE","STAR","",},
+            Remaining = "",
+            GroupClasses = {{},{},{},{},{},{},{},{},{},}
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "Element",
-                [2] = "Shadow",
-				[3] = "Recklessness",
-				[4] = "Weakness",
-				[5] = "Doom",
-                [6] = "Agony",
-				[7] = "",
-				[8] = "",
-				[9] = "",
-            },
-            Restaktion = "None",
-            Klassengruppen = {
-                [1] = {"WARLOCK"},
-                [2] = {"WARLOCK"},
-                [3] = {"WARLOCK"},
-                [4] = {},
-                [5] = {},
-                [6] = {},
-				[7] = {},
-				[8] = {},
-				[9] = {},
-            }
+            GroupNames = {"Element","Shadow","Recklessness","Weakness","Doom","Agony","","","",},
+            Remaining = "None",
+            GroupClasses = {{"WARLOCK"},{"WARLOCK"},{"WARLOCK"},{},{},{},{},{},{},}
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "Group 1",
-                [2] = "Group 2",
-                [3] = "Group 3",
-                [4] = "Group 4",
-                [5] = "Group 5",
-                [6] = "Group 6",
-                [7] = "Group 7",
-                [8] = "Group 8",
-				[9] = "",
-            },
-            Restaktion = "",
-            Klassengruppen = {
-                [1] = {"MAGE"},
-                [2] = {"MAGE"},
-                [3] = {"MAGE"},
-                [4] = {"MAGE"},
-                [5] = {"MAGE"},
-                [6] = {"MAGE"},
-                [7] = {"MAGE"},
-                [8] = {"MAGE"},
-				[9] = {"MAGE"},
-            }
+            GroupNames = {"Group 1","Group 2","Group 3","Group 4","Group 5","Group 6","Group 7","Group 8","",},
+            Remaining = "",
+            GroupClasses = {{"MAGE"},{"MAGE"},{"MAGE"},{"MAGE"},{"MAGE"},{"MAGE"},{"MAGE"},{"MAGE"},{"MAGE"},}
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "Group 1",
-                [2] = "Group 2",
-                [3] = "Group 3",
-                [4] = "Group 4",
-                [5] = "Group 5",
-                [6] = "Group 6",
-                [7] = "Group 7",
-                [8] = "Group 8",
-				[9] = "",
-            },
-            Restaktion = "",
-            Klassengruppen = {
-                [1] = {"PRIEST"},
-                [2] = {"PRIEST"},
-                [3] = {"PRIEST"},
-                [4] = {"PRIEST"},
-                [5] = {"PRIEST"},
-                [6] = {"PRIEST"},
-                [7] = {"PRIEST"},
-                [8] = {"PRIEST"},
-				[9] = {"PRIEST"},
-            }
+            GroupNames = {"Group 1","Group 2","Group 3","Group 4","Group 5","Group 6","Group 7","Group 8","",},
+            Remaining = "",
+            GroupClasses = {{"PRIEST"},{"PRIEST"},{"PRIEST"},{"PRIEST"},{"PRIEST"},{"PRIEST"},{"PRIEST"},{"PRIEST"},{"PRIEST"},}
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "Group 1",
-                [2] = "Group 2",
-                [3] = "Group 3",
-                [4] = "Group 4",
-                [5] = "Group 5",
-                [6] = "Group 6",
-                [7] = "Group 7",
-                [8] = "Group 8",
-				[9] = "",
-            },
-            Restaktion = "",
-            Klassengruppen = {
-                [1] = {"DRUID"},
-                [2] = {"DRUID"},
-                [3] = {"DRUID"},
-                [4] = {"DRUID"},
-                [5] = {"DRUID"},
-                [6] = {"DRUID"},
-                [7] = {"DRUID"},
-                [8] = {"DRUID"},
-				[9] = {"DRUID"},
-            }
+            GroupNames = {"Group 1","Group 2","Group 3","Group 4","Group 5","Group 6","Group 7","Group 8","",},
+            Remaining = "",
+            GroupClasses = {{"DRUID"},{"DRUID"},{"DRUID"},{"DRUID"},{"DRUID"},{"DRUID"},{"DRUID"},{"DRUID"},{"DRUID"},}
         },
     },
 	{
         [L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "Left",
-                [2] = "Right",
-                [3] = "",
-                [4] = "",
-                [5] = "",
-                [6] = "",
-                [7] = "",
-                [8] = "",
-				[9] = "",
-            },
-            Restaktion = "",
-            Klassengruppen = {
-                [1] = {},
-                [2] = {},
-                [3] = {},
-                [4] = {},
-                [5] = {},
-                [6] = {},
-                [7] = {},
-                [8] = {},
-				[9] = {},
-            }
+            GroupNames = {"Left","Right","","","","","","","",},
+            Remaining = "",
+            GroupClasses = {{},{},{},{},{},{},{},{},{},}
         },
     },
 	{
 		[L["SET_DEFAULT"]] = {
             Name = L["SET_DEFAULT"],
-            Beschriftungen = {
-                [1] = "Group 1",
-                [2] = "Group 2",
-                [3] = "Group 3",
-                [4] = "Group 4",
-                [5] = "Group 5",
-                [6] = "Group 6",
-                [7] = "Group 7",
-                [8] = "Group 8",
-				[9] = "",
-            },
-            Restaktion = "",
-            Klassengruppen = {
-                [1] = {},
-                [2] = {},
-                [3] = {},
-                [4] = {},
-                [5] = {},
-                [6] = {},
-                [7] = {},
-                [8] = {},
-				[9] = {},
-            }
+            GroupNames = {"Group 1","Group 2","Group 3","Group 4","Group 5","Group 6","Group 7","Group 8","",},
+            Remaining = "",
+            GroupClasses = {{},{},{},{},{},{},{},{},{},}
         },
 	}
 	}
@@ -597,9 +291,6 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
 	if not RO_RaiderTable then
 		RO_RaiderTable = {}
-		for i = 1, TOTAL_TAB_NB do
-			table.insert(RO_RaiderTable, {})
-		end
 	else
 		self:RefreshRaiderTable()
 	end
@@ -635,13 +326,8 @@ function RaidOrganizer:OnInitialize() -- {{{
     RaidOrganizerDialogBroadcastRaid:SetText(L["RAID"])
     RaidOrganizerDialogBroadcastWhisperText:SetText(L["WHISPER"]) -- api changed?
 	RaidOrganizerDialogBroadcastAutoSyncText:SetText("Sync Send")
-	if (IsRaidLeader() or IsRaidOfficer()) then
-		RaidOrganizerDialogBroadcastAutoSync:SetChecked(true)
-		RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
-	else
-		RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
-		RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
-	end
+	RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
+	RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
     RaidOrganizerDialogClose:SetText(L["CLOSE"])
     RaidOrganizerDialogReset:SetText(L["RESET"])
 	RaidOrganizerDialogResetTab:SetText(L["RESETTAB"])
@@ -696,7 +382,7 @@ function RaidOrganizer:OnInitialize() -- {{{
 	if not self.version then self.version = GetAddOnMetadata("RaidOrganizer", "Version") end
 	RaidOrganizer.RO_version_table = {}
 
-	RaidOrganizerMinimapButton_OnInitialize()
+	-- RaidOrganizerMinimapButton_OnInitialize()
 	
 	if not UnitInRaid('player') then
 		IsPlayerInRaid = false
@@ -715,7 +401,7 @@ function RaidOrganizer:OnInitialize() -- {{{
 		self:OnDisable()
 	end
 
-	self:RaidOrganizer_AskSync()
+	--self:RaidOrganizer_AskSync()
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
@@ -723,8 +409,6 @@ end -- }}}
 
 function RaidOrganizer:OnEnable() -- {{{
     -- Called when the addon is enabled
-	RaidOrganizerMinimapButton:GetNormalTexture():SetDesaturated(false)
-	RaidOrganizerMinimapButton:GetPushedTexture():SetDesaturated(false)
 	self:RegisterEvent("CHAT_MSG_WHISPER")
 	self:RegisterEvent("CHAT_MSG_ADDON")
 	self:RegisterEvent("RAID_ROSTER_UPDATE")
@@ -734,12 +418,11 @@ function RaidOrganizer:OnEnable() -- {{{
 	RaidOrganizerDialogBroadcastRaid:Enable()
 	SendAddonMessage("ROVersion", tostring(self.version), 'RAID', sender)
 	self:UpdateDialogValues()
+	self:TriggerEvent("RaidOrganizer_Enabled")
 end -- }}}
 
 function RaidOrganizer:OnDisable() -- {{{
     -- Called when the addon is disabled
-	RaidOrganizerMinimapButton:GetNormalTexture():SetDesaturated(true)
-	RaidOrganizerMinimapButton:GetPushedTexture():SetDesaturated(true)
 	self:UnregisterAllEvents();
 	self:RegisterEvent("RAID_ROSTER_UPDATE")
 	self:ResetData();
@@ -747,6 +430,7 @@ function RaidOrganizer:OnDisable() -- {{{
 	RaidOrganizerDialogBroadcastSync:Disable()
 	RaidOrganizerDialogBroadcastChannel:Disable()
 	RaidOrganizerDialogBroadcastRaid:Disable()
+	self:TriggerEvent("RaidOrganizer_Disabled")
 end -- }}}
 
 function RaidOrganizer:RefreshRaiderTable()
@@ -780,18 +464,7 @@ function RaidOrganizer:RefreshTables() --{{{
 		WARLOCK = 0,
 		HUNTER = 0,
     }
-    local gruppen = {
-        [1] = 0,
-        [2] = 0,
-        [3] = 0,
-        [4] = 0,
-        [5] = 0,
-        [6] = 0,
-        [7] = 0,
-        [8] = 0,
-        [9] = 0,
-		[10] = 0,
-    }
+    local gruppen = {0,0,0,0,0,0,0,0,0,0,}
 	
 	groupByName = {}
 	
@@ -877,60 +550,24 @@ function RaidOrganizer:RefreshTables() --{{{
 		local classA, engClassA = UnitClass(unitIDa)
 		local classB, engClassB = UnitClass(unitIDb)
 		if engClassA ~= engClassB then
-				if engClassA == "WARRIOR" then -- (Warrior, *)
-						return true
-				end
-				if engClassB == "WARRIOR" then -- (*, Warrior)
-						return false
-				end
-				if engClassA == "ROGUE" then -- (Rogue, *)
-						return true
-				end
-				if engClassB == "ROGUE" then -- (*, Rogue)
-						return false
-				end
-				if engClassA == "MAGE" then -- (Mage, *)
-						return true
-				end
-				if engClassB == "MAGE" then -- (*, Mage)
-						return false
-				end
-				if engClassA == "WARLOCK" then -- (Warlock, *)
-						return true
-				end
-				if engClassB == "WARLOCK" then -- (*, Warlock)
-						return false
-				end
-				if engClassA == "HUNTER" then -- (Hunter, *)
-						return true
-				end
-				if engClassB == "HUNTER" then -- (*, Hunter)
-						return false
-				end
-				if engClassA == "PRIEST" then -- (Priest, *)
-						return true
-				end
-				if engClassB == "PRIEST" then -- (*, Priest)
-						return false
-				end
-				if engClassA == "SHAMAN" then -- (*, Shaman)
-						return true
-				end
-				if engClassB == "SHAMAN" then -- (Shaman, *)
-						return false
-				end
-				if engClassA == "DRUID" then -- (Druid, *)
-						return true
-				end
-				if engClassB == "DRUID" then -- (*, Druid)
-						return false
-				end
-				if engClassA == "PALADIN" then -- (*, Paladin)
-						return true
-				end
-				if engClassB == "PALADIN" then -- (Paladin, *)
-						return false
-				end
+				if engClassA == "WARRIOR" then return true end
+				if engClassB == "WARRIOR" then return false end
+				if engClassA == "ROGUE" then return true end
+				if engClassB == "ROGUE" then return false end
+				if engClassA == "MAGE" then return true end
+				if engClassB == "MAGE" then return false end
+				if engClassA == "WARLOCK" then return true end
+				if engClassB == "WARLOCK" then return false end
+				if engClassA == "HUNTER" then return true end
+				if engClassB == "HUNTER" then return false end
+				if engClassA == "PRIEST" then return true end
+				if engClassB == "PRIEST" then return false end
+				if engClassA == "SHAMAN" then return true end
+				if engClassB == "SHAMAN" then return false end
+				if engClassA == "DRUID" then return true end
+				if engClassB == "DRUID" then return false end
+				if engClassA == "PALADIN" then return true end
+				if engClassB == "PALADIN" then return false end
 		else
 				return a<b
 		end
@@ -972,12 +609,14 @@ function RaidOrganizer_SetTab(id)
 	
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
 		RaidOrganizerDialogBroadcastSync:SetText("Reorganize Raid")
-		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(nil)
-		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(1)
-	elseif RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
+		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(false)
+		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(true)
+	elseif isSync[id] == true then
 		RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
+		RaidOrganizerDialogBroadcastAutoSync:SetChecked(true)
 	else
 		RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
+		RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
 	end
 	
 	RaidOrganizer:UpdateDialogValues();
@@ -1400,13 +1039,13 @@ function RaidOrganizer:LoadLabelsFromSet(set) -- {{{
         grouplabels.Rest = L["REMAINS"]
         groupclasses = {}
         for i=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
-            grouplabels[i] = self.db.account.sets[RaidOrganizerDialog.selectedTab][set].Beschriftungen[i]
+            grouplabels[i] = self.db.account.sets[RaidOrganizerDialog.selectedTab][set].GroupNames[i]
             groupclasses[i] = {}
             for j=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
-                groupclasses[i][j] = self.db.account.sets[RaidOrganizerDialog.selectedTab][set].Klassengruppen[i][j]
+                groupclasses[i][j] = self.db.account.sets[RaidOrganizerDialog.selectedTab][set].GroupClasses[i][j]
             end
         end
-        RaidOrganizerDialogEinteilungRestAction:SetText(self.db.account.sets[RaidOrganizerDialog.selectedTab][set].Restaktion)
+        RaidOrganizerDialogEinteilungRestAction:SetText(self.db.account.sets[RaidOrganizerDialog.selectedTab][set].Remaining)
         if tempsetup[set] then
             RO_RaiderTable[RaidOrganizerDialog.selectedTab] = {}
             for name, einteilung in pairs(tempsetup[set]) do
@@ -1429,16 +1068,16 @@ function RaidOrganizer:SetSave() -- {{{
         self:ErrorMessage(L["SET_CANNOT_SAVE_DEFAULT"])
         return
     end
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Beschriftungen = {}
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Klassengruppen = {}
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].GroupNames = {}
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].GroupClasses = {}
     for i=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
-        self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Beschriftungen[i] = grouplabels[i]
-        self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Klassengruppen[i] = {}
+        self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].GroupNames[i] = grouplabels[i]
+        self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].GroupClasses[i] = {}
         for j=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
-            self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Klassengruppen[i][j] = groupclasses[i][j]
+            self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].GroupClasses[i][j] = groupclasses[i][j]
         end
     end
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Restaktion = RaidOrganizerDialogEinteilungRestAction:GetText()
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][RO_CurrentSet[RaidOrganizerDialog.selectedTab]].Remaining = RaidOrganizerDialogEinteilungRestAction:GetText()
 end -- }}}
 
 function RaidOrganizer:SetSaveAs(name) -- {{{
@@ -1466,16 +1105,16 @@ function RaidOrganizer:SetSaveAs(name) -- {{{
     end
     self.db.account.sets[RaidOrganizerDialog.selectedTab][name] = {}
     self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Name = name
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Beschriftungen = {}
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Klassengruppen = {}
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][name].GroupNames = {}
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][name].GroupClasses = {}
     for i=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
-        self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Beschriftungen[i] = grouplabels[i]
-        self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Klassengruppen[i] = {}
+        self.db.account.sets[RaidOrganizerDialog.selectedTab][name].GroupNames[i] = grouplabels[i]
+        self.db.account.sets[RaidOrganizerDialog.selectedTab][name].GroupClasses[i] = {}
         for j=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
-            self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Klassengruppen[i][j] = groupclasses[i][j]
+            self.db.account.sets[RaidOrganizerDialog.selectedTab][name].GroupClasses[i][j] = groupclasses[i][j]
         end
     end
-    self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Restaktion = RaidOrganizerDialogEinteilungRestAction:GetText()
+    self.db.account.sets[RaidOrganizerDialog.selectedTab][name].Remaining = RaidOrganizerDialogEinteilungRestAction:GetText()
     RO_CurrentSet[RaidOrganizerDialog.selectedTab] = name
     self:LoadCurrentLabels()
     UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab])
@@ -1557,7 +1196,7 @@ function RaidOrganizer:ReplaceTokens(str) -- {{{
                 UnitExists(self:GetUnitByName(oRAOMainTank.core.maintanktable[i])) and
                 UnitName(self:GetUnitByName(oRAOMainTank.core.maintanktable[i])) == oRAOMainTank.core.maintanktable[i]
                 then
-                s = s.."("..oRAOMainTank.core.maintanktable[i]..")"
+                s = oRAOMainTank.core.maintanktable[i]
             end
         end
         return s
@@ -1576,10 +1215,21 @@ function RaidOrganizer:CHAT_MSG_WHISPER(msg, user) -- {{{
     if msg == "assign" then
         local reply = ""
 		local noassign = true
+		local first = true
 		for i=1, SYNC_TAB_NB do
+			first = true
         	if RO_RaiderTable[i][user] then
-            	reply = reply .. " " .. RaidOrganizer_Tabs[i][1] .. " " .. self:ReplaceTokens(grouplabels[RO_RaiderTable[i][user]])
-				noassign = false
+				for j=1, self.CONST.NUM_GROUPS[i] do
+					if RO_RaiderTable[i][user][j + 1] == 1 then
+						if first then
+							reply = reply .. " -*- " .. RaidOrganizer_Tabs[i][1] .. " " .. self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j]
+							first = false
+						else
+							reply = reply .. " " .. self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j]
+						end
+						noassign = false
+					end
+				end
 			end
 		end
 		if noassign then
@@ -1677,115 +1327,42 @@ function RaidOrganizer:SortGroupClass()
 		if b == nil then return true end
 		if a == nil then return false end
 		if a ~= b then
-			if a == "WARRIOR" then -- (Priest, *)
-					return true
-			end
-			if b == "WARRIOR" then -- (*, Priest)
-					return false
-			end
-			if a == "ROGUE" then -- (Priest, *)
-					return true
-			end
-			if b == "ROGUE" then -- (*, Priest)
-					return false
-			end
-			if a == "MAGE" then -- (Priest, *)
-					return true
-			end
-			if b == "MAGE" then -- (*, Priest)
-					return false
-			end
-			if a == "WARLOCK" then -- (Priest, *)
-					return true
-			end
-			if b == "WARLOCK" then -- (*, Priest)
-					return false
-			end
-			if a == "HUNTER" then -- (Priest, *)
-					return true
-			end
-			if b == "HUNTER" then -- (*, Priest)
-					return false
-			end
-			if a == "PRIEST" then -- (Priest, *)
-					return true
-			end
-			if b == "PRIEST" then -- (*, Priest)
-					return false
-			end
-			if a == "SHAMAN" then -- (*, Shaman)
-					return true
-			end
-			if b == "SHAMAN" then -- (Shaman, *)
-					return false
-			end
-			-- inneren zwei
-			if a == "DRUID" then -- (Druid, *)
-					return true
-			end
-			if b == "DRUID" then -- (*, Druid)
-					return false
-			end
-			if a == "PALADIN" then -- (*, Paladin)
-					return true
-			end
-			if b == "PALADIN" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group1" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group1" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group2" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group2" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group3" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group3" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group4" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group4" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group5" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group5" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group6" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group6" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group7" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group7" then -- (Paladin, *)
-					return false
-			end
-			if a == "Group8" then -- (Paladin, *)
-					return true
-			end
-			if b == "Group8" then -- (Paladin, *)
-					return false
-			end
-			if a == "EMPTY" then -- (Paladin, *)
-					return true
-			end
-			if b == "EMPTY" then -- (Paladin, *)
-					return false
-			end
+			if a == "WARRIOR" then return true end
+			if b == "WARRIOR" then return false end
+			if a == "ROGUE" then return true end
+			if b == "ROGUE" then return false end
+			if a == "MAGE" then return true end
+			if b == "MAGE" then return false end
+			if a == "WARLOCK" then return true end
+			if b == "WARLOCK" then return false end
+			if a == "HUNTER" then return true end
+			if b == "HUNTER" then return false end
+			if a == "PRIEST" then return true end
+			if b == "PRIEST" then return false end
+			if a == "SHAMAN" then return true end
+			if b == "SHAMAN" then return false end
+			if a == "DRUID" then return true end
+			if b == "DRUID" then return false end
+			if a == "PALADIN" then return true end
+			if b == "PALADIN" then return false end
+			if a == "Group1" then return true end
+			if b == "Group1" then return false end
+			if a == "Group2" then return true end
+			if b == "Group2" then return false end
+			if a == "Group3" then return true end
+			if b == "Group3" then return false end
+			if a == "Group4" then return true end
+			if b == "Group4" then return false end
+			if a == "Group5" then return true end
+			if b == "Group5" then return false end
+			if a == "Group6" then return true end
+			if b == "Group6" then return false end
+			if a == "Group7" then return true end
+			if b == "Group7" then return false end
+			if a == "Group8" then return true end
+			if b == "Group8" then return false end
+			if a == "EMPTY" then return true end
+			if b == "EMPTY" then return false end
 		else
 			return a<b
 		end
@@ -1934,11 +1511,14 @@ function RaidOrganizer:WriteTooltipText(id)
 	GameTooltip:AddDoubleLine( "________", "____________", 1, 1, 1, 1, 1, 1);
 	local playerNameTable = {}
 	for group=1, self.CONST.NUM_GROUPS[id] do
-		local groupName = self.db.account.sets[id][RO_CurrentSet[id]].Beschriftungen[group]
+		local groupName = self.db.account.sets[id][RO_CurrentSet[id]].GroupNames[group]
+		if id == HEAL_TAB_INDEX then
+			groupName = self:ReplaceTokens(groupName)
+		end
 		if groupName == "CROSS" then
 			color = {1, 0, 0};
 		elseif groupName == "SQUARE" then
-			color = {0, 0, 1};
+			color = {0, 0.5, 1};
 		elseif groupName == "MOON" then
 			color = {0.76, 0.92, 0.89};
 		elseif groupName == "TRIANGLE" then
@@ -2001,14 +1581,18 @@ function RaidOrganizer:RAID_ROSTER_UPDATE()
 				self:ToggleActive()
 			end
 			self:ResetData()
-		elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
+		elseif (IsRaidLeader() or IsRaidOfficer()) then
 			for tab = 1, SYNC_TAB_NB do
-				RaidOrganizer:RaidOrganizer_SendSync(tab);
+				if isSync[tab] == true then
+					RaidOrganizer:RaidOrganizer_SendSync(tab);
+				end
 			end
 		end
 	else
 		IsPlayerInRaid = true
-		self:ToggleActive()
+		if not self:IsActive() then
+			self:ToggleActive()
+		end
 	end
 end
 
@@ -2027,9 +1611,11 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if (askPattern == "ONLOAD") then
 		if sender == UnitName('player') then
 			return
-		elseif (RaidOrganizerDialogBroadcastAutoSync:GetChecked() and (IsRaidLeader() or IsRaidOfficer())) then
+		elseif (IsRaidLeader() or IsRaidOfficer()) then
 			for tab = 1, SYNC_TAB_NB do
-				RaidOrganizer:RaidOrganizer_SendSync(tab);
+				if isSync[tab] == true then
+					RaidOrganizer:RaidOrganizer_SendSync(tab);
+				end
 			end
 		end
 		return
@@ -2090,19 +1676,23 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
+	RaidOrganizerOptions:OnTooltipUpdate()
 end
 
 function RaidOrganizer:AutoSync_OnClick()
 	if RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
 		if not ((IsRaidLeader() or IsRaidOfficer())) then
+			isSync[RaidOrganizerDialog.selectedTab] = false
 			RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
 			RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
 			DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Can't set Send Sync checkbox if not raid lead or assistant")
 		else
 			RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
+			isSync[RaidOrganizerDialog.selectedTab] = true
 		end
 	else
 		RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
+		isSync[RaidOrganizerDialog.selectedTab] = false
 	end
 end
 function RaidOrganizer:DisplayRaiderTable()
@@ -2288,128 +1878,103 @@ function RaidOrganizer:RaidOrganizer_SendSync(id)
 	end
 end
 
-function RaidOrganizer_Minimap_OnEnter()
-	GameTooltip:SetOwner(this, "ANCHOR_BOTTOMLEFT");
-	GameTooltip:AddLine("Raid Organizer " .. RaidOrganizer.version);
-	GameTooltip:AddLine("Left click to show/hide bar", 0,1,0);
-	GameTooltip:AddLine("Right click to show options", 0,1,0);
-	GameTooltip:AddLine("Left click and drag to move", 0,1,0);
-	local str1, str2 = "", "";
-	local color1, color2 = {1,1,1}, {1,1,1};
-	local tmpstr = "";
-	local tmpcolor = {1,1,1}
-	if (IsRaidLeader() or IsRaidOfficer()) and RaidOrganizer.b_versionQuery then
-		GameTooltip:AddLine(" ", 0,0,0);
-		GameTooltip:AddLine("Version Query :");
-		local charName = ""
-		local charVersion = ""
-		for i=1, MAX_RAID_MEMBERS do
-			charName = ""
-			charVersion = ""
-			if UnitExists("raid"..i) then
-				for key,value in pairs(RaidOrganizer.RO_version_table) do
-					if key == UnitName("raid"..i) then
-						charName = key
-						charVersion = value
-						break
+function RaidOrganizer:TooltipUpdate(tablet)
+	tablet:SetTitle("Raid Organizer |cff00ff00v" .. RaidOrganizer.version .. "|r")
+	if RaidOrganizer:IsActive() then
+		local attb = tablet:AddCategory('columns', 2,
+				'child_textR', 1, 'child_textG', 0.82, 'child_textB', 0,
+				'child_text2R', 1, 'child_text2G', 1, 'child_text2B', 1
+			)
+		attb:AddLine("text", "|cffffffffMy assignments :" .. "|r", 'size', 14);
+		local user = UnitName('player')
+		local first = false
+		local tmpcolor = "ffffffff"
+		for i=1, SYNC_TAB_NB do
+			first = true
+			if RO_RaiderTable[i][user] then
+				for j=1, self.CONST.NUM_GROUPS[i] do
+					if RO_RaiderTable[i][user][j + 1] == 1 then
+						if self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "CROSS" then
+							tmpcolor = "ffff0000";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "SQUARE" then
+							tmpcolor = "ff0000ff";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "MOON" then
+							tmpcolor = "ffafe1dc";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "TRIANGLE" then
+							tmpcolor = "ff00ff00";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "DIAMOND" then
+							tmpcolor = "ffff00ff";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "CIRCLE" then
+							tmpcolor = "ffff8000";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "STAR" then
+							tmpcolor = "ffffff00";
+						else
+							tmpcolor = "ffffffff";
+						end
+						if first then
+							attb:AddLine("text", " ");
+						    attb:AddLine("text", RaidOrganizer_Tabs[i][1], "text2", "|c" .. tmpcolor .. self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] .. "|r");
+							first = false
+						else
+							attb:AddLine("text", " ", "text2", "|c" .. tmpcolor .. self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] .. "|r");
+						end
 					end
 				end
-				if charName ~= "" then
-					tmpstr = charName .. " " .. charVersion;
-					if charVersion == RaidOrganizer.version then
-						tmpcolor = {1,1,1}
-					elseif charVersion < RaidOrganizer.version then
-						tmpcolor = {1,0.5,0}
-					else
-						tmpcolor = {0,1,0}
+			end
+		end
+		if (IsRaidLeader() or IsRaidOfficer()) and RaidOrganizer.b_versionQuery then
+			local cat = tablet:AddCategory(
+				'columns', 2,
+				'child_textR', 1, 'child_textG', 0.82, 'child_textB', 0,
+				'child_text2R', 1, 'child_text2G', 1, 'child_text2B', 1
+			)
+			local str1, str2 = "", "";
+			local color1, color2 = "ffffffff", "ffffffff";
+			local tmpstr = "";
+
+			cat:AddLine("text", "|c" .. tmpcolor .. "Version Query :" .. "|r", 'size', 14);
+			cat:AddLine("text", " ");
+			local charName = ""
+			local charVersion = ""
+			for i=1, MAX_RAID_MEMBERS do
+				charName = ""
+				charVersion = ""
+				if UnitExists("raid"..i) then
+					for key,value in pairs(RaidOrganizer.RO_version_table) do
+						if key == UnitName("raid"..i) then
+							charName = key
+							charVersion = value
+							break
+						end
 					end
-				else
-					if UnitIsConnected("raid"..i) then
-						tmpstr = UnitName("raid"..i) .. " N/A";
-						tmpcolor = {1,0,0}
+					if charName ~= "" then
+						tmpstr = charName .. " " .. charVersion;
+						if charVersion == RaidOrganizer.version then
+							tmpcolor = "ffffffff"
+						elseif charVersion < RaidOrganizer.version then
+							tmpcolor = "ffff8000"
+						else
+							tmpcolor = "ff00ff00"
+						end
 					else
-						tmpstr = UnitName("raid"..i) .. " offline";
-						tmpcolor = {0.5,0.5,0.5}
+						if UnitIsConnected("raid"..i) then
+							tmpstr = UnitName("raid"..i) .. " N/A";
+							tmpcolor = "ffff0000"
+						else
+							tmpstr = UnitName("raid"..i) .. " offline";
+							tmpcolor = "ff808080"
+						end
 					end
+					if str1 == "" then str1 = tmpstr; color1 = tmpcolor; else str2 = tmpstr; color2 = tmpcolor end
+					if str2 ~= "" then cat:AddLine("text", "|c" .. color1 .. str1 .. "|r","text2", "|c" .. color2 .. str2 .. "|r"); str1 = ""; str2 = ""; end
 				end
-				if str1 == "" then str1 = tmpstr; color1 = tmpcolor; else str2 = tmpstr; color2 = tmpcolor end
-				if str2 ~= "" then GameTooltip:AddDoubleLine(str1, str2, color1[1], color1[2], color1[3], color2[1], color2[2], color2[3]); str1 = ""; str2 = ""; end
 			end
+			if str1 ~= "" then cat:AddLine("text", "|c" .. color1 .. str1 .. "|r"); str1 = ""; str2 = ""; end
 		end
-		if str1 ~= "" then GameTooltip:AddDoubleLine(str1, "", color1[1], color1[2], color1[3], color2[1], color2[2], color2[3]); str1 = ""; str2 = ""; end
-	end
-	GameTooltip:Show();
-end
-
-function RaidOrganizer_Minimap_Position(x,y)
-	if ( x or y ) then
-		if ( x ) then if ( x < 0 ) then x = x + 360; end RaidOrganizer.db.char.minimapPositionX = x; end
-		if ( y ) then RaidOrganizer.db.char.minimapPositionY = y; end
-	end
-	x, y = RaidOrganizer.db.char.minimapPositionX, RaidOrganizer.db.char.minimapPositionY
-
-	RaidOrganizerMinimapButton:SetPoint("TOPLEFT","Minimap","TOPLEFT",53-((80+(y))*cos(x)),((80+(y))*sin(x))-55);
-end
-
-function RaidOrganizer_Minimap_DragStart()
-	if RaidOrganizer.db.char.lockMinimap then 
-		return 
-	end
-	this:SetScript("OnUpdate", RaidOrganizer_Minimap_DragUpdate);
-end
-function RaidOrganizer_Minimap_DragStop()
-	RaidOrganizerMinimapButton:UnlockHighlight()
-	this:SetScript("OnUpdate", nil);
-end
-function RaidOrganizer_Minimap_DragUpdate()
-	RaidOrganizerMinimapButton:LockHighlight();
-	local curX, curY = GetCursorPosition();
-	local mapX, mapY = Minimap:GetCenter();
-	local x, y;
-	if ( IsShiftKeyDown() ) then
-		y = math.pow( math.pow(curY - mapY * Minimap:GetEffectiveScale(), 2) + math.pow(mapX * Minimap:GetEffectiveScale() - curX, 2), 0.5) - 70;
-		y = min( max( y, -30 ), 30 );
-	end
-	x = math.deg(math.atan2( curY - mapY * Minimap:GetEffectiveScale(), mapX * Minimap:GetEffectiveScale() - curX ));
-
-	RaidOrganizer_Minimap_Position(x,y);
-end
-
-function RaidOrganizer_Minimap_Update()
-	if ( RaidOrganizer.db.char.showMinimap ) then
-		RaidOrganizerMinimapButton:Hide();
+		tablet:SetHint("|cffeda55fClick|r to show bar. |cffeda55fRightClick|r to show options. |cffeda55fShiftClick|r to show dialog. ")
 	else
-		RaidOrganizerMinimapButton:Show();
-		RaidOrganizer_Minimap_Position();
-	end
-end
-
-function RaidOrganizer_Minimap_OnClick(arg1)
-	if arg1 == "LeftButton" then
-		if not RaidOrganizer:IsActive() then
-			RaidOrganizer:ToggleActive()
-			if not RaidOrganizer.db.char.showBar then
-				RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
-				RaidOrganizer:ShowButtons()
-			end
-		else
-			RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
-			RaidOrganizer:ShowButtons()
-		end
-	else
-		dewdrop:Open(RaidOrganizerMinimapButton)
-	end
-end
-
-function RaidOrganizerMinimapButton_OnInitialize()
-	dewdrop:Register(RaidOrganizerMinimapButton, 'children', function() dewdrop:FeedAceOptionsTable(options) end)
-
-	RaidOrganizerMinimapButton:SetNormalTexture("Interface\\Icons\\Inv_misc_head_dragon_black")
-	RaidOrganizerMinimapButton:SetPushedTexture("Interface\\Icons\\Inv_misc_head_dragon_black")
-
-	RaidOrganizer_Minimap_Position(nil, nil)
-	
-	if RaidOrganizer.db.char.showMinimap then
-		RaidOrganizerMinimapButton:Show()
+		local cat = tablet:AddCategory("colums", 1)
+		cat:AddLine("text", "Raid Organizer is currently disabled.")
+		tablet:SetHint("|cffeda55fClick|r to enable.")
 	end
 end
