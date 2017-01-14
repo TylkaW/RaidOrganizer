@@ -401,7 +401,7 @@ function RaidOrganizer:OnInitialize() -- {{{
 		self:OnDisable()
 	end
 
-	self:RaidOrganizer_AskSync()
+	--self:RaidOrganizer_AskSync()
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
@@ -1590,7 +1590,9 @@ function RaidOrganizer:RAID_ROSTER_UPDATE()
 		end
 	else
 		IsPlayerInRaid = true
-		self:ToggleActive()
+		if not self:IsActive() then
+			self:ToggleActive()
+		end
 	end
 end
 
@@ -1674,6 +1676,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
+	RaidOrganizerOptions:OnTooltipUpdate()
 end
 
 function RaidOrganizer:AutoSync_OnClick()
@@ -1968,6 +1971,7 @@ function RaidOrganizer:TooltipUpdate(tablet)
 			end
 			if str1 ~= "" then cat:AddLine("text", "|c" .. color1 .. str1 .. "|r"); str1 = ""; str2 = ""; end
 		end
+		tablet:SetHint("|cffeda55fClick|r to show bar. |cffeda55fRightClick|r to show options. |cffeda55fShiftClick|r to show dialog. ")
 	else
 		local cat = tablet:AddCategory("colums", 1)
 		cat:AddLine("text", "Raid Organizer is currently disabled.")
