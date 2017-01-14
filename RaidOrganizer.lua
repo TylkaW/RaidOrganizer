@@ -1196,7 +1196,7 @@ function RaidOrganizer:ReplaceTokens(str) -- {{{
                 UnitExists(self:GetUnitByName(oRAOMainTank.core.maintanktable[i])) and
                 UnitName(self:GetUnitByName(oRAOMainTank.core.maintanktable[i])) == oRAOMainTank.core.maintanktable[i]
                 then
-                s = s.."("..oRAOMainTank.core.maintanktable[i]..")"
+                s = oRAOMainTank.core.maintanktable[i]
             end
         end
         return s
@@ -1512,10 +1512,13 @@ function RaidOrganizer:WriteTooltipText(id)
 	local playerNameTable = {}
 	for group=1, self.CONST.NUM_GROUPS[id] do
 		local groupName = self.db.account.sets[id][RO_CurrentSet[id]].GroupNames[group]
+		if id == HEAL_TAB_INDEX then
+			groupName = self:ReplaceTokens(groupName)
+		end
 		if groupName == "CROSS" then
 			color = {1, 0, 0};
 		elseif groupName == "SQUARE" then
-			color = {0, 0, 1};
+			color = {0, 0.5, 1};
 		elseif groupName == "MOON" then
 			color = {0.76, 0.92, 0.89};
 		elseif groupName == "TRIANGLE" then
@@ -1875,6 +1878,47 @@ end
 function RaidOrganizer:TooltipUpdate(tablet)
 	tablet:SetTitle("Raid Organizer |cff00ff00v" .. RaidOrganizer.version .. "|r")
 	if RaidOrganizer:IsActive() then
+		local attb = tablet:AddCategory('columns', 2,
+				'child_textR', 1, 'child_textG', 0.82, 'child_textB', 0,
+				'child_text2R', 1, 'child_text2G', 1, 'child_text2B', 1
+			)
+		attb:AddLine("text", "|cffffffffMy assignments :" .. "|r", 'size', 14);
+		local user = UnitName('player')
+		local first = false
+		local tmpcolor = "ffffffff"
+		for i=1, SYNC_TAB_NB do
+			first = true
+			if RO_RaiderTable[i][user] then
+				for j=1, self.CONST.NUM_GROUPS[i] do
+					if RO_RaiderTable[i][user][j + 1] == 1 then
+						if self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "CROSS" then
+							tmpcolor = "ffff0000";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "SQUARE" then
+							tmpcolor = "ff0000ff";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "MOON" then
+							tmpcolor = "ffafe1dc";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "TRIANGLE" then
+							tmpcolor = "ff00ff00";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "DIAMOND" then
+							tmpcolor = "ffff00ff";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "CIRCLE" then
+							tmpcolor = "ffff8000";
+						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "STAR" then
+							tmpcolor = "ffffff00";
+						else
+							tmpcolor = "ffffffff";
+						end
+						if first then
+							attb:AddLine("text", " ");
+						    attb:AddLine("text", RaidOrganizer_Tabs[i][1], "text2", "|c" .. tmpcolor .. self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] .. "|r");
+							first = false
+						else
+							attb:AddLine("text", " ", "text2", "|c" .. tmpcolor .. self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] .. "|r");
+						end
+					end
+				end
+			end
+		end
 		if (IsRaidLeader() or IsRaidOfficer()) and RaidOrganizer.b_versionQuery then
 			local cat = tablet:AddCategory(
 				'columns', 2,
@@ -1884,9 +1928,7 @@ function RaidOrganizer:TooltipUpdate(tablet)
 			local str1, str2 = "", "";
 			local color1, color2 = "ffffffff", "ffffffff";
 			local tmpstr = "";
-			local tmpcolor = "ffffffff"
-			
-			cat:AddLine("text", " ");
+
 			cat:AddLine("text", "|c" .. tmpcolor .. "Version Query :" .. "|r", 'size', 14);
 			cat:AddLine("text", " ");
 			local charName = ""
