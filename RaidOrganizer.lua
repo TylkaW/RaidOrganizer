@@ -129,7 +129,7 @@ RaidOrganizer.options = {
 			type = "execute",
 			name = 'Check version',
 			desc = 'Query raid member RaidOrganizer version',
-			func = function() RaidOrganizer.b_versionQuery = true; if (IsRaidLeader() or IsRaidOfficer()) then RaidOrganizer:RaidOrganizer_VersionQuery() else RaidOrganizer.b_versionQuery = false; DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to check raid version"); end end,
+			func = function()RaidOrganizer:VersionQuery() end,
 			disabled = function() return not RaidOrganizer:IsActive() end,
 		},
     }
@@ -402,7 +402,6 @@ function RaidOrganizer:OnInitialize() -- {{{
 		self:OnDisable()
 	end
 
-	--self:RaidOrganizer_AskSync()
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
@@ -1602,6 +1601,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if (prefix == "ROVersion") then 
 		if self.b_versionQuery then
 			self.RO_version_table[sender] = message
+			self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
 		end
 	end
 	
@@ -1822,9 +1822,17 @@ function RaidOrganizer:RaidOrganizer_AskSync()
 	SendAddonMessage("RaidOrganizer", "ONLOAD 0", "RAID")
 end
 
-function RaidOrganizer:RaidOrganizer_VersionQuery()
-	self.RO_version_table = {}
-	SendAddonMessage("RaidOrganizer", "VQUERY 0", "RAID")
+function RaidOrganizer:VersionQuery()
+	self.b_versionQuery = not self.b_versionQuery
+	self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
+	if self.b_versionQuery == false then return end
+	if (IsRaidLeader() or IsRaidOfficer()) then 
+		self.RO_version_table = {}
+		SendAddonMessage("RaidOrganizer", "VQUERY 0", "RAID")
+	else 
+		RaidOrganizer.b_versionQuery = false
+		DEFAULT_CHAT_FRAME:AddMessage("You have to be raid lead or assistant to check raid version")
+	end
 end
 
 function RaidOrganizer:RaidOrganizer_SendSync(id)
