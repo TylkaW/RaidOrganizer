@@ -1,5 +1,6 @@
 local L = AceLibrary("AceLocale-2.1"):GetInstance("RaidOrganizer", true)
 local dewdrop = AceLibrary("Dewdrop-2.0")
+--local tablet = AceLibrary("Tablet-2.0")
 
 -- name2unitid
 local unitids = {
@@ -1676,7 +1677,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
-	RaidOrganizerOptions:OnTooltipUpdate()
+	self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
 end
 
 function RaidOrganizer:AutoSync_OnClick()
@@ -1897,7 +1898,7 @@ function RaidOrganizer:TooltipUpdate(tablet)
 						if self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "CROSS" then
 							tmpcolor = "ffff0000";
 						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "SQUARE" then
-							tmpcolor = "ff0000ff";
+							tmpcolor = "ff0090ff";
 						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "MOON" then
 							tmpcolor = "ffafe1dc";
 						elseif self.db.account.sets[i][RO_CurrentSet[i]].GroupNames[j] == "TRIANGLE" then

@@ -54,6 +54,7 @@ end
 function RaidOrganizerOptions:OnEnable()
 	self:RegisterEvent("RaidOrganizer_Enabled", "OnStateChange")
 	self:RegisterEvent("RaidOrganizer_Disabled", "OnStateChange")
+	self:RegisterEvent("RaidOrganizer_OnTooltipUpdate", "UpdateTooltip")
 	self:OnStateChange()		
 end
 
