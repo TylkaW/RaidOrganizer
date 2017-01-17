@@ -1,6 +1,12 @@
 -- By mymycracra (http://www.curse-gaming.com/en/profile-14788.html)
 local AceLocale = AceLibrary("AceLocale-2.1")
 
+AceLocale:RegisterTranslation("RaidOrganizerOptions", "frFR", function()
+    return {
+		["AA"] = "GG"
+	}
+end)
+
 AceLocale:RegisterTranslation("RaidOrganizer", "frFR", function()
     return {
         ["CLOSE"] = "Ferme",

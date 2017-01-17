@@ -1,6 +1,12 @@
 -- By Zisu (http://www.curse-gaming.com/en/profile-122056.html)
 local AceLocale = AceLibrary("AceLocale-2.1")
 
+AceLocale:RegisterTranslation("RaidOrganizerOptions", "enGB", function()
+    return {
+		["AA"] = "GG"
+	}
+end)
+
 AceLocale:RegisterTranslation("RaidOrganizer", "enGB", function()
     return {
         ["CLOSE"] = "Close",

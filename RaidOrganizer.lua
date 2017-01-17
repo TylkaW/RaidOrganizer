@@ -1391,8 +1391,19 @@ end
 
 function RaidOrganizer:AutoFill() -- {{{
 	self:SortGroupClass()
+	local function shuffleTable( t )
+		if not t then return end
+		local rand = math.random 
+		local iterations = table.getn(t)
+		local j
+		for i = iterations, 2, -1 do
+			j = rand(i)
+			t[i], t[j] = t[j], t[i]
+		end
+	end
 	if ((RaidOrganizerDialog.selectedTab == BUFF_MAGE_TAB_INDEX or RaidOrganizerDialog.selectedTab == BUFF_PRIEST_TAB_INDEX or RaidOrganizerDialog.selectedTab == BUFF_DRUID_TAB_INDEX)) then
 		self:SetAllRemain()
+		shuffleTable(einteilung[1])
 		local nbBuffer = table.getn(einteilung[1])
 		local tableGroup = {}
 		for group=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
@@ -1419,6 +1430,7 @@ function RaidOrganizer:AutoFill() -- {{{
 			for slot=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
 				if groupclasses[group][slot] then
 					if not einteilung[group+1][slot] then
+						shuffleTable(einteilung[1])
 						for _, name in pairs(einteilung[1]) do
 							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil then
 								local class, engClass = UnitClass(self:GetUnitByName(name))
@@ -1443,7 +1455,8 @@ function RaidOrganizer:AutoFill() -- {{{
 			end
 		end
 	else
-		local boolCheck
+		local boolCheck = true
+		shuffleTable(einteilung[1])
 		for _, name in pairs(einteilung[1]) do
 			boolCheck = true
 			for group=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
