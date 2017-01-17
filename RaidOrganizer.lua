@@ -307,6 +307,10 @@ function RaidOrganizer:OnInitialize() -- {{{
 		end
 	end
     
+	RAID_CLASS_COLORS["SHAMAN"].r = 0.0
+	RAID_CLASS_COLORS["SHAMAN"].g = 0.44
+	RAID_CLASS_COLORS["SHAMAN"].b = 0.87
+	
     RaidOrganizerDialogEinteilungTitle:SetText(L["ARRANGEMENT"])
 	
     for i=1, 40 do
@@ -649,7 +653,7 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 		else
 			RaidOrganizerDialogEinteilungRaiderpool:SetWidth(size)
 		end
-		for i=1, 72 do	
+		for i=1, 80 do	
 			if i < 41 then
 				getglobal("RaidOrganizerDialogEinteilungRaiderpoolSlot"..i):SetWidth(size)
 				if i > 24 then
@@ -753,14 +757,14 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
     end
 
     RaidOrganizerDialogBroadcastChannelEditbox:SetText(self.db.char.chan)
-    for i=1, 72 do
+    for i=1, 80 do
         getglobal("RaidOrganizerDialogButton"..i):ClearAllPoints()
         getglobal("RaidOrganizerDialogButton"..i):Hide()
     end
     local zaehler = 1
     -- Rest {{{
     for i=1, table.getn(einteilung[1]) do
-        if zaehler > 72 then
+        if zaehler > 80 then
             break
         end
         local button = getglobal("RaidOrganizerDialogButton"..zaehler)
@@ -775,7 +779,13 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
         local class, engClass = UnitClass(self:GetUnitByName(einteilung[1][i]))
         local color = RAID_CLASS_COLORS[engClass];
         if color then
-            buttoncolor:SetTexture(color.r, color.g, color.b)
+			if RO_RaiderTable[RaidOrganizerDialog.selectedTab][einteilung[1][i]][1] == 0 then
+				buttoncolor:SetTexture(color.r/3, color.g/3, color.b/3)
+				buttonlabel:SetTextColor(0.5, 0.5, 0.5)
+			else
+				buttoncolor:SetTexture(color.r, color.g, color.b)
+				buttonlabel:SetTextColor(1.0, 0.84, 0)
+			end
         end
 
         button:SetPoint("TOP", "RaidOrganizerDialogEinteilungRaiderpoolSlot"..i)
@@ -787,7 +797,7 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 
     for j=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
         for i=1, table.getn(einteilung[j+1]) do
-            if zaehler > 72 then
+            if zaehler > 80 then
                 break
             end
             local button = getglobal("RaidOrganizerDialogButton"..zaehler)
@@ -798,6 +808,7 @@ function RaidOrganizer:UpdateDialogValues() -- {{{
 			else
 				buttonlabel:SetText(einteilung[j+1][i])
 			end
+			buttonlabel:SetTextColor(1.0, 0.84, 0)
             local class, engClass = UnitClass(self:GetUnitByName(einteilung[j+1][i]))
             local color = RAID_CLASS_COLORS[engClass];
             if color then
@@ -940,10 +951,24 @@ function RaidOrganizer:ChangeChan() -- {{{
     self.db.char.chan = RaidOrganizerDialogBroadcastChannelEditbox:GetText()
 end -- }}}
 
-function RaidOrganizer:RaiderOnClick(arg)
+function RaidOrganizer:RaiderOnClick(arg1)
+	if arg1 == "RightButton" then
+		local _,_,name = string.find(getglobal(this:GetName() .. "Label"):GetText(), "(%a+)")
+		if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] ~= 0 then
+			RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = 0
+			for grp = 1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
+				RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][grp + 1] = nil
+			end
+		else 
+			RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = 1
+		end
+		self:UpdateDialogValues()
+	end
 end
 
 function RaidOrganizer:RaiderOnDragStart() -- {{{
+	local _,_,name = string.find(getglobal(this:GetName() .. "Label"):GetText(), "(%a+)")
+	if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] == 0 then return end
     local cursorX, cursorY = GetCursorPosition()
     this:ClearAllPoints();
     this:SetPoint("CENTER", nil, "BOTTOMLEFT", cursorX*GetScreenHeightScale(), cursorY*GetScreenHeightScale());
@@ -1007,6 +1032,7 @@ end -- }}}
 
 function RaidOrganizer:RaiderOnLoad() -- {{{
     this:SetFrameLevel(this:GetFrameLevel() + 2)
+	this:RegisterForClicks("RightButtonUp")
     this:RegisterForDrag("LeftButton")
 end -- }}}
 
@@ -1384,7 +1410,11 @@ function RaidOrganizer:SortGroupClass()
 end
 
 function RaidOrganizer:SetAllRemain()
-	RO_RaiderTable[RaidOrganizerDialog.selectedTab] = {}
+	for key, value in pairs(RO_RaiderTable[RaidOrganizerDialog.selectedTab]) do
+		for grp = 1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
+			value[grp + 1] = nil
+		end
+	end
 	einteilung = {}
 	self:UpdateDialogValues()
 end
@@ -1404,7 +1434,12 @@ function RaidOrganizer:AutoFill() -- {{{
 	if ((RaidOrganizerDialog.selectedTab == BUFF_MAGE_TAB_INDEX or RaidOrganizerDialog.selectedTab == BUFF_PRIEST_TAB_INDEX or RaidOrganizerDialog.selectedTab == BUFF_DRUID_TAB_INDEX)) then
 		self:SetAllRemain()
 		shuffleTable(einteilung[1])
-		local nbBuffer = table.getn(einteilung[1])
+		local nbBuffer = 0
+		for i=1, table.getn(einteilung[1]) do
+			if RO_RaiderTable[RaidOrganizerDialog.selectedTab][einteilung[1][i]][1] == 1 then
+				nbBuffer = nbBuffer + 1
+			end
+		end
 		local tableGroup = {}
 		for group=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
 			for slot=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
@@ -1417,12 +1452,14 @@ function RaidOrganizer:AutoFill() -- {{{
 		local tableIndex = 1
 		local progress = table.getn(tableGroup)/nbBuffer
 		for _, name in pairs(einteilung[1]) do
-			if tableIndex > table.getn(tableGroup) then break end
-			while tableIndex <= progress do
-				RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][tableGroup[tableIndex]+1] = 1
-				tableIndex = tableIndex + 1
+			if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] == 1 then
+				if tableIndex > table.getn(tableGroup) then break end
+				while tableIndex <= progress do
+					RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][tableGroup[tableIndex]+1] = 1
+					tableIndex = tableIndex + 1
+				end
+				progress = progress + table.getn(tableGroup)/nbBuffer
 			end
-			progress = progress + table.getn(tableGroup)/nbBuffer
 		end
 		self:UpdateDialogValues()
 	elseif (RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil) then
@@ -1432,20 +1469,22 @@ function RaidOrganizer:AutoFill() -- {{{
 					if not einteilung[group+1][slot] then
 						shuffleTable(einteilung[1])
 						for _, name in pairs(einteilung[1]) do
-							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil then
-								local class, engClass = UnitClass(self:GetUnitByName(name))
-								if engClass == groupclasses[group][slot] then
-									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
-									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
-									self:UpdateDialogValues()
-									break;
-								elseif string.find(groupclasses[group][slot], "Group") then
-									local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
-									if tonumber(grpIdx) == groupByName[name] then
+							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] == 1 then
+								if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil then
+									local class, engClass = UnitClass(self:GetUnitByName(name))
+									if engClass == groupclasses[group][slot] then
 										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
 										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
 										self:UpdateDialogValues()
 										break;
+									elseif string.find(groupclasses[group][slot], "Group") then
+										local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
+										if tonumber(grpIdx) == groupByName[name] then
+											RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
+											RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
+											self:UpdateDialogValues()
+											break;
+										end
 									end
 								end
 							end
