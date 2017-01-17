@@ -1634,6 +1634,14 @@
                     <Button name="RaidOrganizerDialogButton70" inherits="RaidOrganizerDialogButtonTemplate"/>
                     <Button name="RaidOrganizerDialogButton71" inherits="RaidOrganizerDialogButtonTemplate"/>
                     <Button name="RaidOrganizerDialogButton72" inherits="RaidOrganizerDialogButtonTemplate"/>
+					<Button name="RaidOrganizerDialogButton73" inherits="RaidOrganizerDialogButtonTemplate"/>
+                    <Button name="RaidOrganizerDialogButton74" inherits="RaidOrganizerDialogButtonTemplate"/>
+                    <Button name="RaidOrganizerDialogButton75" inherits="RaidOrganizerDialogButtonTemplate"/>
+                    <Button name="RaidOrganizerDialogButton76" inherits="RaidOrganizerDialogButtonTemplate"/>
+                    <Button name="RaidOrganizerDialogButton77" inherits="RaidOrganizerDialogButtonTemplate"/>
+                    <Button name="RaidOrganizerDialogButton78" inherits="RaidOrganizerDialogButtonTemplate"/>
+                    <Button name="RaidOrganizerDialogButton79" inherits="RaidOrganizerDialogButtonTemplate"/>
+                    <Button name="RaidOrganizerDialogButton80" inherits="RaidOrganizerDialogButtonTemplate"/>
                     <!-- }}} -->
                 </Frames>
             </Frame> <!-- }}} -->

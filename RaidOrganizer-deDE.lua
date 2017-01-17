@@ -1,5 +1,11 @@
 local AceLocale = AceLibrary("AceLocale-2.1")
 
+AceLocale:RegisterTranslation("RaidOrganizerOptions", "deDE", function()
+    return {
+		["AA"] = "GG"
+	}
+end)
+
 AceLocale:RegisterTranslation("RaidOrganizer", "deDE", function()
     return {
         ["CLOSE"] = "Schlie\195\159en",
