@@ -571,11 +571,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)	
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -594,11 +594,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -617,11 +617,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -640,11 +640,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -664,11 +664,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -687,11 +687,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -710,11 +710,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -733,11 +733,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -756,11 +756,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -823,11 +823,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)	
+						RaidOrganizer:TabButton_OnClick(this:GetID())	
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -846,11 +846,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -869,11 +869,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -892,11 +892,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -916,11 +916,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -939,11 +939,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -962,11 +962,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -985,11 +985,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();
@@ -1008,11 +1008,11 @@
 				</Anchors>
 				<Scripts>
 					<OnClick>
-						RaidOrganizer:TabButton_OnClick(id)
+						RaidOrganizer:TabButton_OnClick(this:GetID())
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(this, "ANCHOR_RIGHT");
-						RaidOrganizer:WriteTooltipText(id)
+						RaidOrganizer:WriteTooltipText(this:GetID())
 					</OnEnter>
 					<OnLeave>
 						GameTooltip:Hide();

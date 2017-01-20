@@ -74,6 +74,8 @@ local level_of_button = -1;
 --]]
 local tempsetup = {}
 
+local barBackgroundTextures = {["Interface\Tooltips\UI-Tooltip-Background"] = "Tooltip", ["Interface/DialogFrame/UI-DialogBox-Background"] = "Dialog"}
+
 -- key bindings
 BINDING_HEADER_RaidOrganizer = "Raid Organizer"
 BINDING_NAME_SHOW_RaidOrganizer = L["SHOW_DIALOG"]
@@ -109,6 +111,21 @@ RaidOrganizer.options = {
 					max = 2,
 					step = 0.01,
 					order = 2
+				},
+				texture = {
+					type= 'group',
+					name = 'Bar textures',
+					desc = 'Bar background and edge textures',
+					args = {
+						backgroundTexture = {
+							type = "text",
+							name = "Background",
+							desc = "Bar background texture",
+							get = function() return barBackgroundTextures[RaidOrganizer.db.char.barBackground] and RaidOrganizer.db.char.barBackground or barBackgroundTextures["Default"] end,
+							set = function(bgfile) if barBackgroundTextures[bgfile] then RaidOrganizer.db.char.barBackground = bgfile; local backdrop = RaidOrganizerButtonsVertical:GetBackdrop(); backdrop.bgFile = bgfile; RaidOrganizerButtonsVertical:SetBackdrop(backdrop); RaidOrganizerButtonsHorizontal:SetBackdrop(backdrop) end end,
+							validate = barBackgroundTextures
+						},
+					}
 				},
 			}
 		},
@@ -591,31 +608,28 @@ function RaidOrganizer:RefreshTables() --{{{
     end
 end -- }}}
 
-function RaidOrganizer_Tab_OnClick(id)
-	if ( not id ) then
-		id = this:GetID();
-	end
-	RaidOrganizer_SetTab(id);
+function RaidOrganizer_Tab_OnClick(idx)
+	RaidOrganizer_SetTab(idx);
 end
 
-function RaidOrganizer_SetTab(id)
-	getglobal("RaidOrganizer_Tab" .. id):SetChecked(1);
+function RaidOrganizer_SetTab(idx)
+	getglobal("RaidOrganizer_Tab" .. idx):SetChecked(1);
 	for i=1,TOTAL_TAB_NB do
-		if i ~= id then
+		if i ~= idx then
 			getglobal("RaidOrganizer_Tab" .. i):SetChecked(nil);
 		end
 	end
 
-	RaidOrganizerDialog.selectedTab = id;
-	RaidOrganizerDialogEinteilungTitle:SetText(RaidOrganizer_Tabs[id][1]);
-	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[id], RO_CurrentSet[id]);
+	RaidOrganizerDialog.selectedTab = idx;
+	RaidOrganizerDialogEinteilungTitle:SetText(RaidOrganizer_Tabs[idx][1]);
+	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[idx], RO_CurrentSet[idx]);
 	RaidOrganizer:LoadCurrentLabels()
 	
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
 		RaidOrganizerDialogBroadcastSync:SetText("Reorganize Raid")
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(false)
 		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(true)
-	elseif isSync[id] == true then
+	elseif isSync[idx] == true then
 		RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
 		RaidOrganizerDialogBroadcastAutoSync:SetChecked(true)
 	else
@@ -1550,6 +1564,10 @@ function RaidOrganizer:ShowButtons()
 			RaidOrganizerButtonsVertical:Show()
 		end
 	end
+end
+
+function RaidOrganizer:ResizeBar(nbRow)
+	RaidOrganizerButtonsHorizontal:Show()
 end
 
 function RaidOrganizer:WriteTooltipText(id)
