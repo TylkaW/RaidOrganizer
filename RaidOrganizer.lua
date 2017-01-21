@@ -25,7 +25,7 @@ local MAX_GROUP_NB = 9
 
 local groupclasses = { {}, {}, {}, {}, {}, {}, {}, {}, {} }
 local isSync = {false, false, false, false, false, false, false, false, false}
-
+local newAttrib = {true, true, true, true, true, true,true, true, true}
 local classTab = {}
 
 local faction = UnitFactionGroup("player")
@@ -65,13 +65,8 @@ local IsPlayerInRaid = false
 
 local change_id = 0
 
--- button level speichern
 local level_of_button = -1;
 
--- saves the raider-setup of other templates
---[[
--- tempsetup[setname] = raider-array
---]]
 local tempsetup = {}
 
 local barBackgroundTextures = {["Interface\Tooltips\UI-Tooltip-Background"] = "Tooltip", ["Interface/DialogFrame/UI-DialogBox-Background"] = "Dialog"}
@@ -90,13 +85,6 @@ RaidOrganizer.options = {
 			name = 'Bar options',
 			desc = 'Shortcut button bar display options',
 			args = {
-				horizontal = {
-				type = 'toggle',
-				name = 'Horizontal',
-				desc = 'Show buttons horizontally or vertically',
-				get = function() return RaidOrganizer.db.char.horizontal end,
-				set = function() RaidOrganizer.db.char.horizontal = not RaidOrganizer.db.char.horizontal; RaidOrganizer:ShowButtons(); end,
-				},
 				scale = {
 					type = 'range',
 					name = "Scale",
@@ -104,12 +92,39 @@ RaidOrganizer.options = {
 					get = function() return RaidOrganizer.db.char.scale end,
 					set = function(v)
 						RaidOrganizer.db.char.scale = v
-						RaidOrganizerButtonsHorizontal:SetScale(RaidOrganizer.db.char.scale)
-						RaidOrganizerButtonsVertical:SetScale(RaidOrganizer.db.char.scale)
+						RaidOrganizerButtonsBar:SetScale(RaidOrganizer.db.char.scale)
 					end,
 					min = 0.5,
 					max = 2,
 					step = 0.01,
+					order = 2
+				},
+				rows = {
+					type = 'range',
+					name = "Rows",
+					desc = "Bar rows",
+					get = function() return RaidOrganizer.db.char.rows end,
+					set = function(v)
+						RaidOrganizer.db.char.rows = v
+						RaidOrganizer:ResizeBar(v, RaidOrganizer.db.char.spacing)
+					end,
+					min = 1,
+					max = 9,
+					step = 1,
+					order = 2
+				},
+				spacing = {
+					type = 'range',
+					name = "Spacing",
+					desc = "Bar button spacing",
+					get = function() return RaidOrganizer.db.char.spacing end,
+					set = function(v)
+						RaidOrganizer.db.char.spacing = v
+						RaidOrganizer:ResizeBar(RaidOrganizer.db.char.rows, v)
+					end,
+					min = -2,
+					max = 10,
+					step = 0.5,
 					order = 2
 				},
 				texture = {
@@ -122,10 +137,314 @@ RaidOrganizer.options = {
 							name = "Background",
 							desc = "Bar background texture",
 							get = function() return barBackgroundTextures[RaidOrganizer.db.char.barBackground] and RaidOrganizer.db.char.barBackground or barBackgroundTextures["Default"] end,
-							set = function(bgfile) if barBackgroundTextures[bgfile] then RaidOrganizer.db.char.barBackground = bgfile; local backdrop = RaidOrganizerButtonsVertical:GetBackdrop(); backdrop.bgFile = bgfile; RaidOrganizerButtonsVertical:SetBackdrop(backdrop); RaidOrganizerButtonsHorizontal:SetBackdrop(backdrop) end end,
+							set = function(bgfile) if barBackgroundTextures[bgfile] then RaidOrganizer.db.char.barBackground = bgfile; local backdrop = RaidOrganizerButtonsBar:GetBackdrop(); backdrop.bgFile = bgfile; RaidOrganizerButtonsBar:SetBackdrop(backdrop); end end,
 							validate = barBackgroundTextures
 						},
 					}
+				},
+				alpha = {
+					type= 'group',
+					name = 'Icon alpha',
+					desc = 'Icon transparancy',
+					args = {
+						icon1 = {
+							type= 'group',
+							name = 'Tab 1',
+							desc = 'Tab 1 Icon transparancy',
+							args = {
+								icon1alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon1alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon1alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon1alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon1alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon1alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon2 = {
+							type= 'group',
+							name = 'Tab 2',
+							desc = 'Tab 2 Icon transparancy',
+							args = {
+								icon2alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon2alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon2alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon2alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon2alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon2alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon3 = {
+							type= 'group',
+							name = 'Tab 3',
+							desc = 'Tab 3 Icon transparancy',
+							args = {
+								icon3alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon3alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon3alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon3alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon3alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon3alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon4 = {
+							type= 'group',
+							name = 'Tab 4',
+							desc = 'Tab 4 Icon transparancy',
+							args = {
+								icon4alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon4alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon4alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon4alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon4alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon4alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon5 = {
+							type= 'group',
+							name = 'Tab 5',
+							desc = 'Tab 5 Icon transparancy',
+							args = {
+								icon5alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon5alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon5alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon5alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon5alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon5alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon6 = {
+							type= 'group',
+							name = 'Tab 6',
+							desc = 'Tab 6 Icon transparancy',
+							args = {
+								icon6alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon6alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon6alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon6alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon6alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon6alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon7 = {
+							type= 'group',
+							name = 'Tab 7',
+							desc = 'Tab 7 Icon transparancy',
+							args = {
+								icon7alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon7alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon7alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon7alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon7alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon7alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon8 = {
+							type= 'group',
+							name = 'Tab 8',
+							desc = 'Tab 8 Icon transparancy',
+							args = {
+								icon8alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon8alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon8alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon8alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon8alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon8alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+						icon9 = {
+							type= 'group',
+							name = 'Tab 9',
+							desc = 'Tab 9 Icon transparancy',
+							args = {
+								icon9alphanormal = {
+									type = "range",
+									name = "Icon transparancy (normal)",
+									desc = "Icon transparancy (normal)",
+									get = function() return RaidOrganizer.db.char.icon9alphanormal end,
+									set = function(v)
+										RaidOrganizer.db.char.icon9alphanormal = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+								icon9alphahighlight = {
+									type = "range",
+									name = "Icon transparancy (highlight)",
+									desc = "Icon transparancy (highlight)",
+									get = function() return RaidOrganizer.db.char.icon9alphahighlight end,
+									set = function(v)
+										RaidOrganizer.db.char.icon9alphahighlight = v; RaidOrganizer:UpdateAlpha();
+									end,
+									min = 0,
+									max = 1,
+									step = 0.05,
+									order = 2
+								},
+							},
+						},
+					},
 				},
 			}
 		},
@@ -133,7 +452,7 @@ RaidOrganizer.options = {
 			type = 'execute',
 			name = 'Show Bar',
 			desc = 'Show/Hide shortcut button bar',
-			func = function() RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar; RaidOrganizer:ShowButtons() end,
+			func = function() RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar; RaidOrganizer:ShowBar() end,
 				
         },
 		showDialog = {
@@ -155,8 +474,27 @@ RaidOrganizer:RegisterChatCommand({"/RaidOrganizer", "/raidorg", "/ro"}, RaidOrg
 RaidOrganizer:RegisterDefaults('char', {
 	chan = "",
 	showBar = true,
-	horizontal = false,
-	scale = 1.0
+	scale = 1.0,
+	rows = 3,
+	spacing = 1,
+	icon1alphanormal = 0.3,
+	icon1alphahighlight = 1,
+	icon2alphanormal = 0.3,
+	icon2alphahighlight = 1,
+	icon3alphanormal = 0.3,
+	icon3alphahighlight = 1,
+	icon4alphanormal = 0.3,
+	icon4alphahighlight = 1,
+	icon5alphanormal = 0.3,
+	icon5alphahighlight = 1,
+	icon6alphanormal = 0.3,
+	icon6alphahighlight = 1,
+	icon7alphanormal = 0.3,
+	icon7alphahighlight = 1,
+	icon8alphanormal = 0.3,
+	icon8alphahighlight = 1,
+	icon9alphanormal = 0.3,
+	icon9alphahighlight = 1,
 })
 
 RaidOrganizer:RegisterDefaults('account', {
@@ -373,11 +711,8 @@ function RaidOrganizer:OnInitialize() -- {{{
 		getglobal("RaidOrganizer_Tab" .. i):SetNormalTexture(RaidOrganizer_Tabs[i][2]);
 		getglobal("RaidOrganizer_Tab" .. i):Show();
 		
-		getglobal("RaidOrganizerButtonsHorizontalTab" .. i).tooltiptext = RaidOrganizer_Tabs[i][1];
-		getglobal("RaidOrganizerButtonsHorizontalTab" .. i):SetNormalTexture(RaidOrganizer_Tabs[i][2]);
-		
-		getglobal("RaidOrganizerButtonsVerticalTab" .. i).tooltiptext = RaidOrganizer_Tabs[i][1];
-		getglobal("RaidOrganizerButtonsVerticalTab" .. i):SetNormalTexture(RaidOrganizer_Tabs[i][2]);
+		getglobal("RaidOrganizerButtonsBarTab" .. i).tooltiptext = RaidOrganizer_Tabs[i][1];
+		getglobal("RaidOrganizerButtonsBarTab" .. i):SetNormalTexture(RaidOrganizer_Tabs[i][2]);
 	end
 	RaidOrganizer_Tab10.tooltiptext = RaidOrganizer_Tabs[RAID_FILL_TAB_INDEX][1];
 	RaidOrganizer_Tab10:SetNormalTexture(RaidOrganizer_Tabs[RAID_FILL_TAB_INDEX][2]);
@@ -395,9 +730,9 @@ function RaidOrganizer:OnInitialize() -- {{{
     -- standard fuer dropdown setzen
     UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab], RO_CurrentSet[RaidOrganizerDialog.selectedTab]);
 
-	RaidOrganizerButtonsHorizontal:SetScale(tonumber(self.db.char.scale))
-	RaidOrganizerButtonsVertical:SetScale(tonumber(self.db.char.scale))
-	self:ShowButtons()
+	RaidOrganizerButtonsBar:SetScale(tonumber(self.db.char.scale))
+	self:ResizeBar(self.db.char.rows, self.db.char.spacing)
+	self:ShowBar()
 	
     self:LoadCurrentLabels()
 	
@@ -1540,49 +1875,64 @@ function RaidOrganizer:AutoFill() -- {{{
 	end
 end -- }}}
 
-function RaidOrganizer:TabButton_OnClick(id)
-	if ( not id ) then
-		id = this:GetID();
-	end
-	RaidOrganizer_SetTab(id);
+function RaidOrganizer:TabButton_OnClick(idx)
+	RaidOrganizer_SetTab(idx);
 	RaidOrganizer:Dialog()
 end
 
-function RaidOrganizer:ShowButtons()
-	if RaidOrganizer.db.char.horizontal then
-		RaidOrganizerButtonsVertical:Hide()
-		if not RaidOrganizer.db.char.showBar then
-			RaidOrganizerButtonsHorizontal:Hide()
-		else
-			RaidOrganizerButtonsHorizontal:Show()
-		end
+function RaidOrganizer:ShowBar()
+	if not RaidOrganizer.db.char.showBar then
+		RaidOrganizerButtonsBar:Hide()
 	else
-		RaidOrganizerButtonsHorizontal:Hide()
-		if not RaidOrganizer.db.char.showBar then
-			RaidOrganizerButtonsVertical:Hide()
+		RaidOrganizerButtonsBar:Show()
+	end
+end
+
+function RaidOrganizer:ResizeBar(nbRow, spacing)
+	local rowTab = {1, 2, 3, 3, 5, 5, 5, 5, 9}
+	local colTab = {9, 5, 3, 3, 2, 2, 2, 2, 1}
+	local isHorizontal
+	nbRow = rowTab[nbRow]
+	local nbCol = colTab[nbRow]
+	local it = 1
+	for i=2, SYNC_TAB_NB do
+		if it == nbCol then
+			getglobal("RaidOrganizerButtonsBarTab" .. i):SetPoint("TOPLEFT", getglobal("RaidOrganizerButtonsBarTab" .. i - nbCol), "BOTTOMLEFT", 0, -spacing )
+			it = 1
 		else
-			RaidOrganizerButtonsVertical:Show()
+			getglobal("RaidOrganizerButtonsBarTab" .. i):SetPoint("TOPLEFT", getglobal("RaidOrganizerButtonsBarTab" .. i - 1), "TOPRIGHT", spacing, 0 )
+			it = it + 1
 		end
 	end
+	RaidOrganizerButtonsBar:SetWidth( nbCol * (30 + spacing) - spacing + 10)
+	RaidOrganizerButtonsBar:SetHeight( nbRow * (30 + spacing) - spacing + 10)
+	RaidOrganizerButtonsBar:Show()
+	self:UpdateAlpha()
 end
 
-function RaidOrganizer:ResizeBar(nbRow)
-	RaidOrganizerButtonsHorizontal:Show()
-end
-
-function RaidOrganizer:WriteTooltipText(id)
-	if not RaidOrganizer:IsActive() then return end
-	
-	GameTooltip:SetText(this.tooltiptext);
-	if ( not id ) then
-		id = this:GetID();
+function RaidOrganizer:UpdateAlpha()
+	local alphaValue = 1
+	for i=1, SYNC_TAB_NB do 
+		if newAttrib[i] == true then
+			alphaValue = loadstring("return RaidOrganizer.db.char.icon" .. i .. "alphahighlight")()
+		else
+			alphaValue = loadstring("return RaidOrganizer.db.char.icon" .. i .. "alphanormal")()
+		end
+		getglobal("RaidOrganizerButtonsBarTab" .. i):SetAlpha(alphaValue)
 	end
+end
+
+function RaidOrganizer:WriteTooltipText(idx)
+	if not RaidOrganizer:IsActive() then return end
+	newAttrib[idx] = false
+	self:UpdateAlpha()
+	GameTooltip:SetText(this.tooltiptext);
 	local color = {1, 1, 1};
 	GameTooltip:AddDoubleLine( "________", "____________", 1, 1, 1, 1, 1, 1);
 	local playerNameTable = {}
-	for group=1, self.CONST.NUM_GROUPS[id] do
-		local groupName = self.db.account.sets[id][RO_CurrentSet[id]].GroupNames[group]
-		if id == HEAL_TAB_INDEX then
+	for group=1, self.CONST.NUM_GROUPS[idx] do
+		local groupName = self.db.account.sets[idx][RO_CurrentSet[idx]].GroupNames[group]
+		if idx == HEAL_TAB_INDEX then
 			groupName = self:ReplaceTokens(groupName)
 		end
 		if groupName == "CROSS" then
@@ -1602,8 +1952,8 @@ function RaidOrganizer:WriteTooltipText(id)
 		end
 		
 		playerNameTable = {}
-		for nameChar in RO_RaiderTable[id] do
-			if RO_RaiderTable[id][nameChar][group + 1] then
+		for nameChar in RO_RaiderTable[idx] do
+			if RO_RaiderTable[idx][nameChar][group + 1] then
 				local _, engClass = UnitClass(self:GetUnitByName(nameChar))
 				if not (engClass == nil or engClass == "") then
 					if playerNameTable[engClass] == nil then
@@ -1618,7 +1968,7 @@ function RaidOrganizer:WriteTooltipText(id)
 			end
 		end
 		local firstLine = true
-		for _,engClassIt in pairs (classTab[id]) do
+		for _,engClassIt in pairs (classTab[idx]) do
 			if not (playerNameTable[engClassIt] == nil) then
 				if (firstLine == true) then
 					GameTooltip:AddDoubleLine( groupName .. " : ", playerNameTable[engClassIt], color[1], color[2], color[3], RAID_CLASS_COLORS[engClassIt].r, RAID_CLASS_COLORS[engClassIt].g, RAID_CLASS_COLORS[engClassIt].b);
@@ -1706,6 +2056,8 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	end
 	if askPattern == "MANUAL" then
 		DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Syncing " .. RaidOrganizer_Tabs[tonumber(tab_id)][1] .. " assignment from " .. sender);
+		newAttrib[tonumber(tab_id)] = true;
+		self:UpdateAlpha()
 		return
 	end
 	local pattern = '(%d+)%s+(%d+)';

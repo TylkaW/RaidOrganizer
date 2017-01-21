@@ -82,12 +82,11 @@ function RaidOrganizerOptions:OnClick()
 			RaidOrganizer:Dialog()
 		else
 			RaidOrganizer.db.char.showBar = not RaidOrganizer.db.char.showBar
-			RaidOrganizer:ShowButtons()
+			RaidOrganizer:ShowBar()
 		end
 	else
 		RaidOrganizer:ToggleActive(true)
 		RaidOrganizer.db.char.showBar = true
-		RaidOrganizer:ShowButtons()
+		RaidOrganizer:ShowBar()
 	end
-	--self:UpdateTooltip()
 end
