@@ -2,7 +2,7 @@
 ## Title: Raid Organizer
 ## Notes: User friendly raid organizer
 ## Author: Tylka (based on Progman work)
-## Version: 0.9.904
+## Version: 0.9.906
 ## X-Category: Raid
 
 ## OptionalDeps: Ace2 DewdropLib
