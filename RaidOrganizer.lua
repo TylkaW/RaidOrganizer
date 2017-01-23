@@ -69,8 +69,17 @@ local level_of_button = -1;
 
 local tempsetup = {}
 
-local barBackgroundTextures = {["Interface/Tooltips/UI-Tooltip-Background"] = "Tooltip", ["Interface/DialogFrame/UI-DialogBox-Background"] = "Dialog", [""] = "None"}
-local barBackgroundEdges = {["Interface/Tooltips/UI-Tooltip-Border"] = "Tooltip", ["Interface/DialogFrame/UI-DialogBox-Border"] = "Dialog", [""] = "None"}
+local barBackgroundTextures = {	["Interface/Tooltips/UI-Tooltip-Background"] = "Tooltip", 
+								["Interface/DialogFrame/UI-DialogBox-Background"] = "Dialog",
+								["Interface/Buttons/WHITE8x8"] = "WHITE8X8", [""] = "None"}
+								
+local barBackgroundEdges = {["Interface/Tooltips/UI-Tooltip-Border"] = "Tooltip",
+							["Interface/DialogFrame/UI-DialogBox-Border"] = "Dialog",
+							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\roth.tga"] = "roth",
+							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\tot.tga"] = "tot",
+							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\tut.tga"] = "tut",
+							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\ada.tga"] = "ada",
+							[""] = "None"}
 
 local ROBar_backdrop = {
   -- path to the background texture
@@ -775,6 +784,8 @@ function RaidOrganizer:OnInitialize() -- {{{
 	RaidOrganizerButtonsBar:SetScale(tonumber(self.db.char.scale))
 	self:ResizeBar(self.db.char.rows, self.db.char.spacing)
 	self:ShowBar()
+	
+	dewdrop:Register(RaidOrganizerButtonsBar, 'children', self.options.args.barDisplay)
 	
     self:LoadCurrentLabels()
 	
