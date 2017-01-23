@@ -69,7 +69,28 @@ local level_of_button = -1;
 
 local tempsetup = {}
 
-local barBackgroundTextures = {["Interface\Tooltips\UI-Tooltip-Background"] = "Tooltip", ["Interface/DialogFrame/UI-DialogBox-Background"] = "Dialog"}
+local barBackgroundTextures = {["Interface/Tooltips/UI-Tooltip-Background"] = "Tooltip", ["Interface/DialogFrame/UI-DialogBox-Background"] = "Dialog", [""] = "None"}
+local barBackgroundEdges = {["Interface/Tooltips/UI-Tooltip-Border"] = "Tooltip", ["Interface/DialogFrame/UI-DialogBox-Border"] = "Dialog", [""] = "None"}
+
+local ROBar_backdrop = {
+  -- path to the background texture
+  bgFile = "Interface\Tooltips\UI-Tooltip-Background",  
+  -- path to the border texture
+  edgeFile = "Interface\Tooltips\UI-Tooltip-Border",
+  -- true to repeat the background texture to fill the frame, false to scale it
+  tile = true,
+  -- size (width or height) of the square repeating background tiles (in pixels)
+  tileSize = 12,
+  -- thickness of edge segments and square size of edge corners (in pixels)
+  edgeSize = 16,
+  -- distance from the edges of the frame to those of the background texture (in pixels)
+  insets = {
+    left = 4,
+    right = 4,
+    top = 4,
+    bottom = 4
+  }
+}
 
 -- key bindings
 BINDING_HEADER_RaidOrganizer = "Raid Organizer"
@@ -122,7 +143,7 @@ RaidOrganizer.options = {
 						RaidOrganizer.db.char.spacing = v
 						RaidOrganizer:ResizeBar(RaidOrganizer.db.char.rows, v)
 					end,
-					min = -2,
+					min = -5,
 					max = 10,
 					step = 0.5,
 					order = 2
@@ -137,9 +158,25 @@ RaidOrganizer.options = {
 							name = "Background",
 							desc = "Bar background texture",
 							get = function() return barBackgroundTextures[RaidOrganizer.db.char.barBackground] and RaidOrganizer.db.char.barBackground or barBackgroundTextures["Default"] end,
-							set = function(bgfile) if barBackgroundTextures[bgfile] then RaidOrganizer.db.char.barBackground = bgfile; local backdrop = RaidOrganizerButtonsBar:GetBackdrop(); backdrop.bgFile = bgfile; RaidOrganizerButtonsBar:SetBackdrop(backdrop); end end,
+							set = function(bgfile) RaidOrganizer:SetBarTexture(bgfile) end,
 							validate = barBackgroundTextures
 						},
+						backgroundEdge = {
+							type = "text",
+							name = "Edges",
+							desc = "Bar background edges",
+							get = function() return barBackgroundEdges[RaidOrganizer.db.char.barEdges] and RaidOrganizer.db.char.barEdges or barBackgroundEdges["Default"] end,
+							set = function(edgefile) RaidOrganizer:SetBarEdge(edgefile) end,
+							validate = barBackgroundEdges
+						},
+						color = {
+							type= 'color',
+							name = 'Background color',
+							desc = 'Bar background color',
+							hasAlpha = true,
+							get = function() return RaidOrganizerButtonsBar:GetBackdropColor() end,
+							set = function(r,g,b,a) RaidOrganizer.db.char.color.r = r; RaidOrganizer.db.char.color.g = g; RaidOrganizer.db.char.color.b = b; RaidOrganizer.db.char.color.a = a; return RaidOrganizerButtonsBar:SetBackdropColor(r,g,b,a); end,
+						},	
 					}
 				},
 				alpha = {
@@ -495,6 +532,9 @@ RaidOrganizer:RegisterDefaults('char', {
 	icon8alphahighlight = 1,
 	icon9alphanormal = 0.3,
 	icon9alphahighlight = 1,
+	color = { ["r"] = 0, ["g"] = 0, ["b"] = 0, ["a"] = 0.5 },
+	barBackground = "Interface\Tooltips\UI-Tooltip-Background",
+	barEdges = "Interface\Tooltips\UI-Tooltip-Border",
 })
 
 RaidOrganizer:RegisterDefaults('account', {
@@ -729,7 +769,9 @@ function RaidOrganizer:OnInitialize() -- {{{
 	end
     -- standard fuer dropdown setzen
     UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[RaidOrganizerDialog.selectedTab], RO_CurrentSet[RaidOrganizerDialog.selectedTab]);
-
+	
+	RaidOrganizer:SetBarTexture(self.db.char.barBackground)
+	RaidOrganizer:SetBarEdge(self.db.char.barEdges)
 	RaidOrganizerButtonsBar:SetScale(tonumber(self.db.char.scale))
 	self:ResizeBar(self.db.char.rows, self.db.char.spacing)
 	self:ShowBar()
@@ -1909,6 +1951,27 @@ function RaidOrganizer:ResizeBar(nbRow, spacing)
 	RaidOrganizerButtonsBar:Show()
 	self:UpdateAlpha()
 end
+
+function RaidOrganizer:SetBarTexture(bgfile)
+	if barBackgroundTextures[bgfile] then 
+		self.db.char.barBackground = bgfile; 
+		ROBar_backdrop.bgFile = bgfile;
+		RaidOrganizerButtonsBar:SetBackdrop(nil);
+		RaidOrganizerButtonsBar:SetBackdrop(ROBar_backdrop);
+		RaidOrganizerButtonsBar:SetBackdropColor(self.db.char.color.r, self.db.char.color.g, self.db.char.color.b, self.db.char.color.a)
+	end
+end
+
+function RaidOrganizer:SetBarEdge(edgefile)
+	if barBackgroundEdges[edgefile] then 
+		self.db.char.barEdges = edgefile; 
+		ROBar_backdrop.edgeFile = edgefile;
+		RaidOrganizerButtonsBar:SetBackdrop(nil);
+		RaidOrganizerButtonsBar:SetBackdrop(ROBar_backdrop);
+		RaidOrganizerButtonsBar:SetBackdropColor(self.db.char.color.r, self.db.char.color.g, self.db.char.color.b, self.db.char.color.a)
+	end
+end
+
 
 function RaidOrganizer:UpdateAlpha()
 	local alphaValue = 1
