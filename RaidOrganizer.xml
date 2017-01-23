@@ -544,9 +544,6 @@
         </Backdrop> -->
 		
         <Scripts>
-			<OnLoad>
-				this:RegisterForClicks("RightButtonUp")
-			</OnLoad>
             <OnMouseDown>
                 this:StartMoving(); 
             </OnMouseDown>
