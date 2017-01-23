@@ -531,7 +531,7 @@
         <Anchors>
             <Anchor point="CENTER" />
         </Anchors>
-        <Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+        <!-- <Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
                 <TileSize>
                         <AbsValue val="12"/>
                 </TileSize>
@@ -541,13 +541,12 @@
                 <BackgroundInsets>
                         <AbsInset left="4" right="4" top="4" bottom="4"/>
                 </BackgroundInsets>
-        </Backdrop>
+        </Backdrop> -->
 		
         <Scripts>
-            <OnLoad>
-				this:SetBackdropColor(0, 0, 0, 0.5);
-                <!-->table.insert(UISpecialFrames,this:GetName());</-->
-            </OnLoad>
+			<OnLoad>
+				this:RegisterForClicks("RightButtonUp")
+			</OnLoad>
             <OnMouseDown>
                 this:StartMoving(); 
             </OnMouseDown>

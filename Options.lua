@@ -34,7 +34,7 @@ RaidOrganizerOptions.name = "FuBar - Raid Organizer"
 RaidOrganizerOptions:RegisterDB("RaidOrganizerFubarDB")
 
 RaidOrganizerOptions.hasNoColor = true
-RaidOrganizerOptions.hasIcon = "nterface\\AddOns\\RaidOrganizer\\Textures\\Icons\\INV_Misc_Head_Dragon_Black_Enable.tga"
+RaidOrganizerOptions.hasIcon = "Interface\\AddOns\\RaidOrganizer\\Textures\\Icons\\INV_Misc_Head_Dragon_Black_Enable.tga"
 RaidOrganizerOptions.lockMinimap = true
 RaidOrganizerOptions.defaultMinimapPosition = 180
 RaidOrganizerOptions.clickableTooltip = true
