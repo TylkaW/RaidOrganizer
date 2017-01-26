@@ -983,6 +983,8 @@ function RaidOrganizer:RefreshTables() --{{{
 		return true
     end --}}}
     for key, _ in pairs(einteilung) do
+		local hasGroupClass = false
+		local emptyGroupClassIdx = 0
 		groupIndex = key
         table.sort(einteilung[key], SortEinteilung)
         for index, name in pairs(einteilung[key]) do
@@ -992,6 +994,29 @@ function RaidOrganizer:RefreshTables() --{{{
 				end
 			end
             position[name][key] = index
+			hasGroupClass = false
+			emptyGroupClassIdx = 0
+			if key ~= 1 then 
+				local class, engClass = UnitClass(self:GetUnitByName(name))
+				for i=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
+					if emptyGroupClassIdx == 0 and groupclasses[key - 1][i] == nil and einteilung[key][i] == nil then
+						emptyGroupClassIdx = i
+					elseif engClass == groupclasses[key - 1][i] then
+						if einteilung[key][i] == nil or UnitClass(self:GetUnitByName(einteilung[key][i])) ~= groupclasses[key - 1][i] then
+							local tmpClass = groupclasses[key - 1][index]
+							groupclasses[key - 1][i] = tmpClass
+							groupclasses[key - 1][index] = engClass
+							hasGroupClass = true
+							break
+						end
+					end
+				end
+				if (not hasGroupClass) and (emptyGroupClassIdx > 0) then
+					local tmpClass = groupclasses[key - 1][index]
+					groupclasses[key - 1][emptyGroupClassIdx] = tmpClass
+					groupclasses[key - 1][index] = nil
+				end
+			end
         end
     end
 end -- }}}
@@ -1014,7 +1039,8 @@ function RaidOrganizer_SetTab(idx)
 	RaidOrganizer:LoadCurrentLabels()
 	
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
-		RaidOrganizerDialogBroadcastSync:SetText("Reorganize Raid")
+		RaidOrganizerDialogBroadcastAutoSyncText:SetText("Set/Get Layout")
+		RaidOrganizerDialogBroadcastSync:SetText("Get Raid Layout")
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(false)
 		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(true)
 	elseif isSync[idx] == true then
@@ -1269,6 +1295,7 @@ function RaidOrganizer:ResetTab() -- {{{
         groupclasses[i] = {}
     end
     self:UpdateDialogValues()
+	self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
 end -- }}}
 
 function RaidOrganizer:ResetData() -- {{{
@@ -1280,6 +1307,7 @@ function RaidOrganizer:ResetData() -- {{{
 	if RaidOrganizerDialog:IsShown() then
 		self:UpdateDialogValues()
 	end
+	self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
 end -- }}}
 
 function RaidOrganizer:BroadcastChan() --{{{
@@ -1380,6 +1408,9 @@ function RaidOrganizer:RaiderOnDragStart() -- {{{
 end -- }}}
 
 function RaidOrganizer:RaiderOnDragStop() -- {{{
+	local _,_,name = string.find(getglobal(this:GetName() .. "Label"):GetText(), "(%a+)")
+	if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] == 0 then return end
+	
     this:SetFrameLevel(level_of_button)
     this:StopMovingOrSizing()
 	
@@ -1405,30 +1436,31 @@ function RaidOrganizer:RaiderOnDragStop() -- {{{
 					position[this.username][1] = 0
 				else
 					if group >= 1 and group <= self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] then
-							lastAction["group"] = RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username]
-							if RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil then
-								for k=1, MAX_GROUP_NB + 1 do
-									RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][k] = nil
-								end
+						lastAction["group"] = RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username]
+						if RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil then
+							for k=1, MAX_GROUP_NB + 1 do
+								RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][k] = nil
 							end
-							RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][group+1] = 1	
+						end
+						RO_RaiderTable[RaidOrganizerDialog.selectedTab][this.username][group+1] = 1
 					end
 					if slot >= 1 and slot <= self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] then
-							lastAction["name"] = this.username
-							for k=1, MAX_GROUP_NB + 1 do
-								if lastAction["group"][k] then
-									lastAction["position"][k] = position[this.username][k]
-								else
-									lastAction["position"][k] = 0
-								end
+						lastAction["name"] = this.username
+						for k=1, MAX_GROUP_NB + 1 do
+							if lastAction["group"][k] then
+								lastAction["position"][k] = position[this.username][k]
+							else
+								lastAction["position"][k] = 0
 							end
-							position[this.username][group+1] = slot
+						end
+						position[this.username][group+1] = slot
 					end
 				end
 				break
 			end
 		end
     end
+	self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
     self:UpdateDialogValues()
 end -- }}}
 
@@ -1819,6 +1851,7 @@ function RaidOrganizer:SetAllRemain()
 	end
 	einteilung = {}
 	self:UpdateDialogValues()
+	self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
 end
 
 function RaidOrganizer:AutoFill() -- {{{
@@ -1878,6 +1911,11 @@ function RaidOrganizer:AutoFill() -- {{{
 										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
 										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
 										self:UpdateDialogValues()
+										-- if table.getn(einteilung[group + 1]) < slot then
+											-- local tmpClass = groupclasses[group][table.getn(einteilung[group + 1])]
+											-- groupclasses[group][table.getn(einteilung[group + 1])] = engClass
+											-- groupclasses[group][slot] = tmpClass
+										-- end
 										break;
 									elseif string.find(groupclasses[group][slot], "Group") then
 										local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
@@ -1902,21 +1940,34 @@ function RaidOrganizer:AutoFill() -- {{{
 			boolCheck = true
 			for group=1, self.CONST.NUM_GROUPS[RaidOrganizerDialog.selectedTab] do
 				for slot=1, self.CONST.NUM_SLOTS[RaidOrganizerDialog.selectedTab] do
-					if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil and boolCheck then
-						if groupclasses[group][slot] then
-							if not einteilung[group+1][slot] then
-								local class, engClass = UnitClass(self:GetUnitByName(name))
-								if engClass == groupclasses[group][slot] then
-									RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
-									self:UpdateDialogValues()
-									boolCheck = false
-								elseif string.find(groupclasses[group][slot], "Group") then
-									local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
-									if tonumber(grpIdx) == groupByName[name] then
+					if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] == 1 then
+						if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil and boolCheck then
+							if groupclasses[group][slot] then
+								if not einteilung[group+1][slot] then
+									local class, engClass = UnitClass(self:GetUnitByName(name))
+									if engClass == groupclasses[group][slot] then
 										RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
 										self:UpdateDialogValues()
+										-- if table.getn(einteilung[group + 1]) < slot then
+											-- local tmpClass = groupclasses[group][table.getn(einteilung[group + 1])]
+											-- groupclasses[group][table.getn(einteilung[group + 1])] = engClass
+											-- groupclasses[group][slot] = tmpClass
+										-- end
 										boolCheck = false
-										break;
+									elseif string.find(groupclasses[group][slot], "Group") then
+										local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
+										if tonumber(grpIdx) == groupByName[name] then
+											RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
+											self:UpdateDialogValues()
+										if table.getn(einteilung[group + 1]) < slot then
+											local tmpClass = groupclasses[group][table.getn(einteilung[group + 1])]
+											groupclasses[group][table.getn(einteilung[group + 1])] = engClass
+											groupclasses[group][slot] = tmpClass
+										end
+
+											boolCheck = false
+											break;
+										end
 									end
 								end
 							end
@@ -1926,6 +1977,8 @@ function RaidOrganizer:AutoFill() -- {{{
 			end
 		end
 	end
+	self:UpdateDialogValues()
+	self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
 end -- }}}
 
 function RaidOrganizer:TabButton_OnClick(idx)
@@ -2177,7 +2230,17 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 end
 
 function RaidOrganizer:AutoSync_OnClick()
-	if RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
+	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
+		if not ((IsRaidLeader() or IsRaidOfficer())) then
+			RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
+			DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Can't set Set Raid Layout checkbox if not raid lead")
+		end
+		if RaidOrganizerDialogBroadcastAutoSync:GetChecked() == 1 then
+			RaidOrganizerDialogBroadcastSync:SetText("Set Raid Layout")
+		else
+			RaidOrganizerDialogBroadcastSync:SetText("Get Raid Layout")
+		end
+	elseif RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
 		if not ((IsRaidLeader() or IsRaidOfficer())) then
 			isSync[RaidOrganizerDialog.selectedTab] = false
 			RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
@@ -2203,85 +2266,88 @@ function RaidOrganizer:DisplayRaiderTable()
 end
 		
 function RaidOrganizer:ReorganizeRaid()
-	self:RefreshRaiderTable()
-	self:UpdateDialogValues()
-	raidIDPerGroup = {{},{},{},{},{},{},{},{}}
-	for i=1, self.CONST.NUM_GROUPS[RAID_FILL_TAB_INDEX] do
-		raidIDPerGroup[i] = {0, 0, 0, 0, 0}
-	end
-	local count = 0
-	local group_count = {0, 0, 0, 0, 0, 0, 0, 0}
-	for i=1, MAX_RAID_MEMBERS do
-		if UnitExists("raid"..i) then
-			local unitname,_,subgroup = GetRaidRosterInfo(i)
-			for j=1,5 do
-				if raidIDPerGroup[subgroup][j] == 0 then
-					raidIDPerGroup[subgroup][j] = i
-					group_count[subgroup] = group_count[subgroup] + 1
-					break
-				end
-			end
+	if RaidOrganizerDialogBroadcastAutoSync:GetChecked() == 1 then
+		if not IsRaidLeader() then return end
+		self:RefreshRaiderTable()
+		self:UpdateDialogValues()
+		raidIDPerGroup = {{},{},{},{},{},{},{},{}}
+		for i=1, self.CONST.NUM_GROUPS[RAID_FILL_TAB_INDEX] do
+			raidIDPerGroup[i] = {0, 0, 0, 0, 0}
 		end
-	end
-	local backup_group = 0
-	for key, value in pairs(group_count) do
-		if value < 5 then
-			backup_group = key
-		end
-	end
-		
-	if backup_group == 0 then DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Reorganize Raid can't be performed if raid is full. Remove a raider and try again.") 	return end
-
-	for i=1, MAX_RAID_MEMBERS do
-		if UnitExists("raid"..i) then
-			unitname = UnitName("raid"..i)
-			local group = 0
-			if RO_RaiderTable[RAID_FILL_TAB_INDEX][unitname] then
-				for j = 1, self.CONST.NUM_GROUPS[RAID_FILL_TAB_INDEX] do
-					if RO_RaiderTable[RAID_FILL_TAB_INDEX][unitname][j+1] == 1 then
-						group = j
+		local count = 0
+		local group_count = {0, 0, 0, 0, 0, 0, 0, 0}
+		for i=1, MAX_RAID_MEMBERS do
+			if UnitExists("raid"..i) then
+				local unitname,_,subgroup = GetRaidRosterInfo(i)
+				for j=1,5 do
+					if raidIDPerGroup[subgroup][j] == 0 then
+						raidIDPerGroup[subgroup][j] = i
+						group_count[subgroup] = group_count[subgroup] + 1
 						break
 					end
 				end
-				if group > 0 then
-					if not (groupByName[unitname] == group) then
-						local currentID = i
-						local currentGroup = groupByName[unitname]
-						local currentTableIndex = 0
-						local targetID = 0
-						local targetGroup = group
-						local targetTableIndex = 0
-						for k = 1, 5 do
-							if raidIDPerGroup[currentGroup][k] == currentID then
-								currentTableIndex = k
-								break
-							end
+			end
+		end
+		local backup_group = 0
+		for key, value in pairs(group_count) do
+			if value < 5 then
+				backup_group = key
+			end
+		end
+			
+		if backup_group == 0 then DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Reorganize Raid can't be performed if raid is full. Remove a raider and try again.") 	return end
+
+		for i=1, MAX_RAID_MEMBERS do
+			if UnitExists("raid"..i) then
+				unitname = UnitName("raid"..i)
+				local group = 0
+				if RO_RaiderTable[RAID_FILL_TAB_INDEX][unitname] then
+					for j = 1, self.CONST.NUM_GROUPS[RAID_FILL_TAB_INDEX] do
+						if RO_RaiderTable[RAID_FILL_TAB_INDEX][unitname][j+1] == 1 then
+							group = j
+							break
 						end
-						
-						if group_count[targetGroup] == 5 then
-							for targetTableIndex = 1, 5 do
-								targetID = raidIDPerGroup[targetGroup][targetTableIndex]
-								if (not (RO_RaiderTable[RAID_FILL_TAB_INDEX][UnitName("raid"..targetID)][targetGroup+1] == 1)) then
-									SetRaidSubgroup(targetID, backup_group)
-									SetRaidSubgroup(currentID, targetGroup)
-									SetRaidSubgroup(targetID, currentGroup)
-									groupByName[UnitName("raid"..targetID)] = currentGroup
-									groupByName[unitname] = targetGroup
-									raidIDPerGroup[targetGroup][targetTableIndex] = i
-									raidIDPerGroup[currentGroup][currentTableIndex] = targetID
+					end
+					if group > 0 then
+						if not (groupByName[unitname] == group) then
+							local currentID = i
+							local currentGroup = groupByName[unitname]
+							local currentTableIndex = 0
+							local targetID = 0
+							local targetGroup = group
+							local targetTableIndex = 0
+							for k = 1, 5 do
+								if raidIDPerGroup[currentGroup][k] == currentID then
+									currentTableIndex = k
 									break
 								end
 							end
-						else
-							for targetTableIndex = 1, 5 do
-								if raidIDPerGroup[targetGroup][targetTableIndex] == 0 then
-									SetRaidSubgroup(currentID, targetGroup)
-									groupByName[unitname] = targetGroup
-									raidIDPerGroup[currentGroup][currentTableIndex] = 0
-									group_count[currentGroup] = group_count[currentGroup] - 1
-									raidIDPerGroup[targetGroup][targetTableIndex] = currentID
-									group_count[targetGroup] = group_count[targetGroup] + 1
-									break
+							
+							if group_count[targetGroup] == 5 then
+								for targetTableIndex = 1, 5 do
+									targetID = raidIDPerGroup[targetGroup][targetTableIndex]
+									if (not (RO_RaiderTable[RAID_FILL_TAB_INDEX][UnitName("raid"..targetID)][targetGroup+1] == 1)) then
+										SetRaidSubgroup(targetID, backup_group)
+										SetRaidSubgroup(currentID, targetGroup)
+										SetRaidSubgroup(targetID, currentGroup)
+										groupByName[UnitName("raid"..targetID)] = currentGroup
+										groupByName[unitname] = targetGroup
+										raidIDPerGroup[targetGroup][targetTableIndex] = i
+										raidIDPerGroup[currentGroup][currentTableIndex] = targetID
+										break
+									end
+								end
+							else
+								for targetTableIndex = 1, 5 do
+									if raidIDPerGroup[targetGroup][targetTableIndex] == 0 then
+										SetRaidSubgroup(currentID, targetGroup)
+										groupByName[unitname] = targetGroup
+										raidIDPerGroup[currentGroup][currentTableIndex] = 0
+										group_count[currentGroup] = group_count[currentGroup] - 1
+										raidIDPerGroup[targetGroup][targetTableIndex] = currentID
+										group_count[targetGroup] = group_count[targetGroup] + 1
+										break
+									end
 								end
 							end
 						end
@@ -2289,14 +2355,26 @@ function RaidOrganizer:ReorganizeRaid()
 				end
 			end
 		end
+	else
+		self:RefreshRaiderTable()
+		self:UpdateDialogValues()
+		for name, value in RO_RaiderTable[RAID_FILL_TAB_INDEX] do
+			value[1] = nil
+			for i=1, self.CONST.NUM_GROUPS[RAID_FILL_TAB_INDEX]  do
+				if i == groupByName[name] then
+					value[i+1] = 1
+				else
+					value[i+1] = nil
+				end
+			end
+		end
+		self:UpdateDialogValues()
 	end
 end
 
 function RaidOrganizer:RaidOrganizer_SyncOnClick()
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
-		if IsRaidLeader() then
-			self:ReorganizeRaid()
-		end
+		self:ReorganizeRaid()
 		return
 	end
 	
