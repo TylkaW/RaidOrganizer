@@ -452,67 +452,67 @@
             </Button>
 			<Button name="$parentSlot18" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot1" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot17" relativePoint="BOTTOMLEFT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot19" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot2" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot1" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot20" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot3" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot2" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot21" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot4" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot3" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot22" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot5" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot4" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot23" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot6" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot5" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot24" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot7" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot6" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot25" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot8" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot7" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot26" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot9" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot8" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot27" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot10" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot9" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot28" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot11" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot10" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot29" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot12" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot11" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
 			<Button name="$parentSlot30" inherits="RaidOrganizerDialogSlotTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentSlot13" relativePoint="TOPRIGHT" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentSlot12" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
             <!-- }}}-->
@@ -531,18 +531,6 @@
         <Anchors>
             <Anchor point="CENTER" />
         </Anchors>
-        <!-- <Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
-                <TileSize>
-                        <AbsValue val="12"/>
-                </TileSize>
-                <EdgeSize>
-                        <AbsValue val="16"/>
-                </EdgeSize>
-                <BackgroundInsets>
-                        <AbsInset left="4" right="4" top="4" bottom="4"/>
-                </BackgroundInsets>
-        </Backdrop> -->
-		
         <Scripts>
             <OnMouseDown>
                 this:StartMoving(); 
@@ -1257,6 +1245,15 @@
 							<Anchor point="TOPLEFT" relativeTo="RaidOrganizer_Tab9" relativePoint="BOTTOMLEFT">
 								<Offset>
 									<AbsDimension x="0" y="-17"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</CheckButton>
+					<CheckButton name="RaidOrganizer_Tab11" inherits="RaidOrganizer_TabTemplate" id="11">
+						<Anchors>
+							<Anchor point="BOTTOMLEFT" relativeTo="RaidOrganizer_Tab1" relativePoint="TOPLEFT">
+								<Offset>
+									<AbsDimension x="0" y="17"/>
 								</Offset>
 							</Anchor>
 						</Anchors>
