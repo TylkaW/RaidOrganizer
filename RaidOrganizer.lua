@@ -75,6 +75,7 @@ local tempsetup = {}
 
 local barBackgroundTextures = {	["Interface/Tooltips/UI-Tooltip-Background"] = "Tooltip", 
 								["Interface/DialogFrame/UI-DialogBox-Background"] = "Dialog",
+								["Interface\\AddOns\\RaidOrganizer\\Textures\\Background\\UI-Tooltip-Background.tga"] = "Tooltip_square",
 								["Interface/Buttons/WHITE8x8"] = "WHITE8X8", [""] = "None"}
 								
 local barBackgroundEdges = {["Interface/Tooltips/UI-Tooltip-Border"] = "Tooltip",
@@ -83,6 +84,7 @@ local barBackgroundEdges = {["Interface/Tooltips/UI-Tooltip-Border"] = "Tooltip"
 							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\tot.tga"] = "tot",
 							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\tut.tga"] = "tut",
 							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\ada.tga"] = "ada",
+							["Interface\\AddOns\\RaidOrganizer\\Textures\\Border\\UI-Tooltip-Border.tga"] = "Tooltip_square",
 							[""] = "None"}
 
 local ROBar_backdrop = {
@@ -906,7 +908,7 @@ function RaidOrganizer:RefreshTables() --{{{
 				for j=1, table.getn(classTab[RaidOrganizerDialog.selectedTab]) do
 					if engClass == classTab[RaidOrganizerDialog.selectedTab][j] then
 						if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname] then
-							if not RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] then
+							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][1] == nil then
 								for k=1, MAX_GROUP_NB do
 									if RO_RaiderTable[RaidOrganizerDialog.selectedTab][unitname][k+1] then
 										if gruppen[k+1] >= self.SLOT_PER_GROUP_PER_TAB[RaidOrganizerDialog.selectedTab][k] then
@@ -1054,7 +1056,12 @@ function RaidOrganizer_SetTab(idx)
 	UIDropDownMenu_SetSelectedValue(RaidOrganizerDialogEinteilungSetsDropDown, RO_CurrentSet[idx], RO_CurrentSet[idx]);
 	RaidOrganizer:LoadCurrentLabels()
 	RaidOrganizerDialogBroadcastSync:Enable()
-	RaidOrganizerDialogBroadcastSync:Enable()
+	RaidOrganizerDialogBroadcastAutoSync:Enable()
+	RaidOrganizerDialogBroadcastChannel:Enable()
+	RaidOrganizerDialogBroadcastRaid:Enable()
+	RaidOrganizerDialogEinteilungSetsSave:Enable()
+	RaidOrganizerDialogEinteilungSetsSaveAs:Enable()
+	RaidOrganizerDialogEinteilungSetsDelete:Enable()
 	RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:Enable()
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
 		RaidOrganizerDialogBroadcastAutoSyncText:SetText("Set/Get Layout")
@@ -1062,10 +1069,17 @@ function RaidOrganizer_SetTab(idx)
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:Disable()
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(false)
 		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(true)
+		RaidOrganizerDialogBroadcastChannel:Disable()
+		RaidOrganizerDialogBroadcastRaid:Disable()
 	elseif RaidOrganizerDialog.selectedTab == ROLE_TAB_INDEX then
 		RaidOrganizerDialogBroadcastSync:Disable()
-		RaidOrganizerDialogBroadcastSync:Disable()
+		RaidOrganizerDialogBroadcastAutoSync:Disable()
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:Disable()
+		RaidOrganizerDialogBroadcastChannel:Disable()
+		RaidOrganizerDialogBroadcastRaid:Disable()
+		RaidOrganizerDialogEinteilungSetsSave:Disable()
+		RaidOrganizerDialogEinteilungSetsSaveAs:Disable()
+		RaidOrganizerDialogEinteilungSetsDelete:Disable()
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(false)
 		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(true)
 	elseif isSync[idx] == true then
@@ -1535,51 +1549,7 @@ function RaidOrganizer:RaiderOnDragStop() -- {{{
 					elseif classLUT[engClass] ~= rolePerGroup[group] then
 						RO_HybrideSpec[name] = rolePerGroup[group]
 					end
-					local role = rolePerGroup[group]
-					if engClass == "PRIEST" then
-						RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name] = {};
-						RO_RaiderTable[HEAL_TAB_INDEX][name] = {}; 
-						if role == "HEALER" then 
-							RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; 
-							RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name][1] = 1; 
-						else
-							RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
-							RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name][1] = 0;
-						end
-					elseif engClass == "DRUID" then
-						RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name] = {};
-						RO_RaiderTable[HEAL_TAB_INDEX][name] = {}; 
-						RO_RaiderTable[TANK_TAB_INDEX][name] = {}; 
-						if role == "HEALER" then 
-							RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; 
-							RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 1;
-							RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0; 
-						elseif role == "TANK" then
-							RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
-							RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 0;
-							RO_RaiderTable[TANK_TAB_INDEX][name][1] = 1; 
-						else
-							RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
-							RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 1;
-							RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0; 
-						end
-					elseif engClass == "WARRIOR" then
-						RO_RaiderTable[TANK_TAB_INDEX][name] = {};
-						if role == "TANK" then RO_RaiderTable[TANK_TAB_INDEX][name] = 1; 
-						else RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0;
-						end
-					elseif engClass == "PALADIN" then
-						RO_RaiderTable[HEAL_TAB_INDEX][name] = {};
-						if role == "HEALER" then RO_RaiderTable[HEAL_TAB_INDEX][name] = 1; 
-						else RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0;
-						end
-					elseif engClass == "PALADIN" then
-						RO_RaiderTable[HEAL_TAB_INDEX][name] = {};
-						if role == "HEALER" then RO_RaiderTable[HEAL_TAB_INDEX][name] = 1; 
-						else RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0;
-						end
-					end
-					self:RoleAutoComplete()
+					self:UpdateTableFromRole(name, rolePerGroup[group], engClass)
 				end
 				break
 			end
@@ -1840,6 +1810,7 @@ function RaidOrganizer:OnMouseWheel(richtung) -- {{{
     if not this then
         return
     end
+	if RaidOrganizerDialog.selectedTab == ROLE_TAB_INDEX then return end
     local _,_,group,slot = string.find(this:GetName(), "RaidOrganizerDialogEinteilungHealGroup(%d+)Slot(%d+)")
     group,slot = tonumber(group),tonumber(slot)
     if not group or not slot then
@@ -2011,6 +1982,7 @@ function RaidOrganizer:AutoFill() -- {{{
 			t[i], t[j] = t[j], t[i]
 		end
 	end
+	if RaidOrganizerDialog.selectedTab == ROLE_TAB_INDEX then self:RoleAutoComplete(); self:UpdateDialogValues(); return end
 	if ((RaidOrganizerDialog.selectedTab == BUFF_MAGE_TAB_INDEX or RaidOrganizerDialog.selectedTab == BUFF_PRIEST_TAB_INDEX or RaidOrganizerDialog.selectedTab == BUFF_DRUID_TAB_INDEX)) then
 		self:SetAllRemain()
 		shuffleTable(einteilung[1])
@@ -2264,6 +2236,59 @@ function RaidOrganizer:WriteTooltipText(idx)
 	GameTooltip:Show()
 end
 
+function RaidOrganizer:UpdateTableFromRole(name, role, class)
+	if class == "PRIEST" then
+		if not RO_RaiderTable[HEAL_TAB_INDEX][name] then RO_RaiderTable[HEAL_TAB_INDEX][name] = {} end
+		if not RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name] then RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name] = {} end
+		if role == "HEALER" then 
+			if RO_RaiderTable[HEAL_TAB_INDEX][name][1] == 0 then RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; end
+			if RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name][1] == 0 then RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name][1] = 1; end
+		else
+			RO_RaiderTable[HEAL_TAB_INDEX][name] = {};
+			RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0;
+			RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name] = {};
+			RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name][1] = 0;
+		end
+	elseif class == "DRUID" then
+		if not RO_RaiderTable[HEAL_TAB_INDEX][name] then RO_RaiderTable[HEAL_TAB_INDEX][name] = {} end
+		if not RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name] then RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name] = {} end
+		if not RO_RaiderTable[TANK_TAB_INDEX][name] then RO_RaiderTable[TANK_TAB_INDEX][name] = {} end
+		if role == "HEALER" then 
+			if RO_RaiderTable[HEAL_TAB_INDEX][name][1] == 0 then RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; end
+			if RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] == 0 then RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 1; end
+			RO_RaiderTable[TANK_TAB_INDEX][name] = {};
+			RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0; 
+		elseif role == "TANK" then
+			RO_RaiderTable[HEAL_TAB_INDEX][name] = {};
+			RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
+			RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name] = {};
+			RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 0;
+			if RO_RaiderTable[TANK_TAB_INDEX][name][1] == 0 then RO_RaiderTable[TANK_TAB_INDEX][name][1] = 1; end
+		else
+			RO_RaiderTable[HEAL_TAB_INDEX][name] = {};
+			RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
+			if RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] == 0 then RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 1; end
+			RO_RaiderTable[TANK_TAB_INDEX][name] = {};
+			RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0; 
+		end
+	elseif class == "WARRIOR" then
+		if not RO_RaiderTable[TANK_TAB_INDEX][name] then RO_RaiderTable[TANK_TAB_INDEX][name] = {} end
+		if role == "TANK" then if RO_RaiderTable[TANK_TAB_INDEX][name][1] == 0 then RO_RaiderTable[TANK_TAB_INDEX][name][1] = 1; end
+		else RO_RaiderTable[TANK_TAB_INDEX][name] = {}; RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0;
+		end
+	elseif class == "PALADIN" then
+		if not RO_RaiderTable[HEAL_TAB_INDEX][name] then RO_RaiderTable[HEAL_TAB_INDEX][name] = {} end
+		if role == "HEALER" then if RO_RaiderTable[HEAL_TAB_INDEX][name][1] == 0 then RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; end
+		else RO_RaiderTable[HEAL_TAB_INDEX][name] = {}; RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0;
+		end
+	elseif class == "SHAMAN" then
+		if not RO_RaiderTable[HEAL_TAB_INDEX][name] then RO_RaiderTable[HEAL_TAB_INDEX][name] = {} end
+		if role == "HEALER" then if RO_RaiderTable[HEAL_TAB_INDEX][name][1] == 0 then RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; end
+		else RO_RaiderTable[HEAL_TAB_INDEX][name] = {}; RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0;
+		end
+	end
+end
+
 function RaidOrganizer:RoleAutoComplete()
 	local classLUT = {
 		["WARRIOR"] = "TANK",
@@ -2276,6 +2301,7 @@ function RaidOrganizer:RoleAutoComplete()
 		["WARLOCK"] = "CASTER",
 		["HUNTER"] = "MELEE",
 	}
+	self:RefreshTables()
 	for name, value in RO_RaiderTable[ROLE_TAB_INDEX] do
 		local _,engClass = UnitClass(self:GetUnitByName(name))
 		local role = classLUT[engClass]
@@ -2293,49 +2319,7 @@ function RaidOrganizer:RoleAutoComplete()
 			elseif role == "CASTER" then
 				value[5] = 1
 			end
-			if engClass == "PRIEST" then
-				RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name] = {};
-				RO_RaiderTable[HEAL_TAB_INDEX][name] = {}; 
-				if role == "HEALER" then 
-					RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; 
-					RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name][1] = 1; 
-				else
-					RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
-					RO_RaiderTable[BUFF_PRIEST_TAB_INDEX][name][1] = 0;
-				end
-			elseif engClass == "DRUID" then
-				RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name] = {};
-				RO_RaiderTable[HEAL_TAB_INDEX][name] = {}; 
-				RO_RaiderTable[TANK_TAB_INDEX][name] = {}; 
-				if role == "HEALER" then 
-					RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 1; 
-					RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 1;
-					RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0; 
-				elseif role == "TANK" then
-					RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
-					RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 0;
-					RO_RaiderTable[TANK_TAB_INDEX][name][1] = 1; 
-				else
-					RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0; 
-					RO_RaiderTable[BUFF_DRUID_TAB_INDEX][name][1] = 1;
-					RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0; 
-				end
-			elseif engClass == "WARRIOR" then
-				RO_RaiderTable[TANK_TAB_INDEX][name] = {};
-				if role == "TANK" then RO_RaiderTable[TANK_TAB_INDEX][name] = 1; 
-				else RO_RaiderTable[TANK_TAB_INDEX][name][1] = 0;
-				end
-			elseif engClass == "PALADIN" then
-				RO_RaiderTable[HEAL_TAB_INDEX][name] = {};
-				if role == "HEALER" then RO_RaiderTable[HEAL_TAB_INDEX][name] = 1; 
-				else RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0;
-				end
-			elseif engClass == "PALADIN" then
-				RO_RaiderTable[HEAL_TAB_INDEX][name] = {};
-				if role == "HEALER" then RO_RaiderTable[HEAL_TAB_INDEX][name] = 1; 
-				else RO_RaiderTable[HEAL_TAB_INDEX][name][1] = 0;
-				end
-			end
+			self:UpdateTableFromRole(name, role, engClass)
 		end
 	end
 end
