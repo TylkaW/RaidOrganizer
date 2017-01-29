@@ -1015,15 +1015,20 @@ function RaidOrganizer:RefreshTables() --{{{
 			hasGroupClass = false
 			emptyGroupClassIdx = 0
 			if key ~= 1 then 
-				local class, engClass = UnitClass(self:GetUnitByName(name))
+				local subgroupStr = "Group" .. groupByName[name]
+				local _, engClass = UnitClass(self:GetUnitByName(name))
 				for i=1, self.SLOT_PER_GROUP_PER_TAB[RaidOrganizerDialog.selectedTab][key - 1] do
 					if emptyGroupClassIdx == 0 and groupclasses[key - 1][i] == nil and einteilung[key][i] == nil then
 						emptyGroupClassIdx = i
-					elseif engClass == groupclasses[key - 1][i] then
-						if einteilung[key][i] == nil or UnitClass(self:GetUnitByName(einteilung[key][i])) ~= groupclasses[key - 1][i] then
+					elseif engClass == groupclasses[key - 1][i] or subgroupStr == groupclasses[key - 1][i] then
+						if einteilung[key][i] == nil or UnitClass(self:GetUnitByName(einteilung[key][i])) ~= groupclasses[key - 1][i] or ("Group" .. groupByName[einteilung[key][i]]) ~= groupclasses[key - 1][i] then
 							local tmpClass = groupclasses[key - 1][index]
+							if engClass == groupclasses[key - 1][i] then
+								groupclasses[key - 1][index] = engClass
+							else
+								groupclasses[key - 1][index] = subgroupStr
+							end
 							groupclasses[key - 1][i] = tmpClass
-							groupclasses[key - 1][index] = engClass
 							hasGroupClass = true
 							break
 						end
@@ -1972,6 +1977,7 @@ end
 
 function RaidOrganizer:AutoFill() -- {{{
 	self:SortGroupClass()
+	self:RefreshTables()
 	local function shuffleTable( t )
 		if not t then return end
 		local rand = math.random 
@@ -2016,78 +2022,27 @@ function RaidOrganizer:AutoFill() -- {{{
 			end
 		end
 		self:UpdateDialogValues()
-	elseif (RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil) then
+	else
+		shuffleTable(einteilung[1])
 		for group=1, MAX_GROUP_NB do
 			if self.SLOT_PER_GROUP_PER_TAB[RaidOrganizerDialog.selectedTab][group] > 0 then
 				for slot=1, self.SLOT_PER_GROUP_PER_TAB[RaidOrganizerDialog.selectedTab][group] do
 					if groupclasses[group][slot] then
 						if not einteilung[group+1][slot] then
-							shuffleTable(einteilung[1])
-							for _, name in pairs(einteilung[1]) do
+							for key, name in pairs(einteilung[1]) do
 								if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] == 1 then
 									if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil then
 										local class, engClass = UnitClass(self:GetUnitByName(name))
-										if engClass == groupclasses[group][slot] then
+										local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
+										if engClass == groupclasses[group][slot] or tonumber(grpIdx) == groupByName[name] then
 											RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
-											RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
-											self:RefreshTables()
-											self:UpdateGroupClassTextures()
-											self:UpdateRaiderLayout()
-											break;
-										elseif string.find(groupclasses[group][slot], "Group") then
-											local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
-											if tonumber(grpIdx) == groupByName[name] then
-												RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
+											table.remove(einteilung[1], key)
+											if RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:GetChecked() == nil then
 												RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] = nil
-												self:RefreshTables()
-												self:UpdateGroupClassTextures()
-												self:UpdateRaiderLayout()
-												break;
+											else
+												table.insert(einteilung[1], name)
 											end
-										end
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	else
-		local boolCheck = true
-		shuffleTable(einteilung[1])
-		for _, name in pairs(einteilung[1]) do
-			boolCheck = true
-			for group=1, MAX_GROUP_NB do
-				if self.SLOT_PER_GROUP_PER_TAB[RaidOrganizerDialog.selectedTab][group] > 0 then
-					for slot=1, self.SLOT_PER_GROUP_PER_TAB[RaidOrganizerDialog.selectedTab][group] do
-						if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][1] == 1 then
-							if RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] == nil and boolCheck then
-								if groupclasses[group][slot] then
-									if not einteilung[group+1][slot] then
-										local class, engClass = UnitClass(self:GetUnitByName(name))
-										if engClass == groupclasses[group][slot] then
-											RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
-											self:RefreshTables()
-											self:UpdateGroupClassTextures()
-											self:UpdateRaiderLayout()
-											boolCheck = false
-										elseif string.find(groupclasses[group][slot], "Group") then
-											local _,_, grpIdx = string.find(groupclasses[group][slot], "Group(%d)")
-											if tonumber(grpIdx) == groupByName[name] then
-												RO_RaiderTable[RaidOrganizerDialog.selectedTab][name][group+1] = 1
-												self:RefreshTables()
-												self:UpdateGroupClassTextures()
-												self:UpdateRaiderLayout()
-											if table.getn(einteilung[group + 1]) < slot then
-												local tmpClass = groupclasses[group][table.getn(einteilung[group + 1])]
-												groupclasses[group][table.getn(einteilung[group + 1])] = engClass
-												groupclasses[group][slot] = tmpClass
-											end
-
-												boolCheck = false
-												break;
-											end
+											break;
 										end
 									end
 								end
