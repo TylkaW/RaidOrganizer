@@ -70,7 +70,6 @@ local IsPlayerInRaid = false
 local change_id = 0
 
 local level_of_button = -1;
-
 local tempsetup = {}
 
 local barBackgroundTextures = {	["Interface/Tooltips/UI-Tooltip-Background"] = "Tooltip", 
@@ -503,10 +502,19 @@ RaidOrganizer.options = {
             func = function() RaidOrganizer:Dialog() end,
         },
 		versionQuery = {
-			type = "execute",
+			type = "toggle",
 			name = 'Check version',
 			desc = 'Query raid member RaidOrganizer version',
-			func = function()RaidOrganizer:VersionQuery() end,
+			get = function() return RaidOrganizer.b_versionQuery end,
+			set = function() RaidOrganizer:VersionQuery() end,
+			disabled = function() return not RaidOrganizer:IsActive() end,
+		},
+		whosSyncing = {
+			type = "toggle",
+			name = 'Who is syncing ?',
+			desc = 'Display which raid officer/leader is syncing tab',
+			get = function() return RaidOrganizer.b_whosSyncingDisplay end,
+			set = function() RaidOrganizer.b_whosSyncingDisplay = not RaidOrganizer.b_whosSyncingDisplay; RaidOrganizer:TriggerEvent("RaidOrganizer_OnTooltipUpdate"); end,
 			disabled = function() return not RaidOrganizer:IsActive() end,
 		},
     }
@@ -647,7 +655,9 @@ RaidOrganizer.SLOT_PER_GROUP_PER_TAB = {{8, 8, 8, 8, 8, 8, 0, 0, 0},
 										}
 
 RaidOrganizer.b_versionQuery = false
+RaidOrganizer.b_whosSyncingDisplay = false
 RaidOrganizer.RO_version_table = {}
+RaidOrganizer.senderTable = {{}, {}, {}, {}, {}, {}, {}, {}, {}}
 local RO_CLASS_COLOR = RAID_CLASS_COLORS;
 
 function RaidOrganizer:OnInitialize() -- {{{
@@ -1069,6 +1079,7 @@ function RaidOrganizer_SetTab(idx)
 	RaidOrganizerDialogEinteilungSetsDelete:Enable()
 	RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:Enable()
 	if RaidOrganizerDialog.selectedTab == RAID_FILL_TAB_INDEX then
+		RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
 		RaidOrganizerDialogBroadcastAutoSyncText:SetText("Set/Get Layout")
 		RaidOrganizerDialogBroadcastSync:SetText("Get Raid Layout")
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:Disable()
@@ -1811,6 +1822,40 @@ function RaidOrganizer:CHAT_MSG_WHISPER(msg, user) -- {{{
     end
 end -- }}}
 
+function RaidOrganizer:CreateClassMenu(group, slot)
+	local classArray = classTab[RaidOrganizerDialog.selectedTab];
+	for i = 1, table.getn(classArray) do
+		local class = classArray[i]
+		dewdrop:AddLine( 'text', class,
+						 'checked', groupclasses[group][slot] == class,
+						 'func', function() if groupclasses[group][slot] == class then groupclasses[group][slot] = nil else groupclasses[group][slot] = class end self:RefreshTables(); self:UpdateGroupClassTextures(); dewdrop:Close() end)
+	end
+	if RaidOrganizerDialog.selectedTab == RAID_PLACEMENT_TAB_INDEX then 
+		for i = 1, 8 do
+		local class = "Group" .. tostring(i)
+		dewdrop:AddLine( 'text', class,
+						 'checked', groupclasses[group][slot] == class,
+						 'func', function() if groupclasses[group][slot] == class then groupclasses[group][slot] = nil else groupclasses[group][slot] = class end self:RefreshTables(); self:UpdateGroupClassTextures(); dewdrop:Close() end)
+		end
+	end
+end
+function RaidOrganizer:GroupSlot_OnLoad()
+	this:RegisterForClicks("RightButtonUp")
+end
+
+function RaidOrganizer:GroupSlot_OnClick(arg1)
+	if arg1 == "RightButton" then
+		local _,_, group, slot = string.find(this:GetName(), "RaidOrganizerDialogEinteilungHealGroup(%d+)Slot(%d+)")
+		if group == nil or slot == nil then return end
+		dewdrop:Open(this, 'children', function() self:CreateClassMenu(tonumber(group), tonumber(slot)) end)
+	end
+end
+
+-- so mousewheel won't reach the frame underneath (RaidOrganizerDialogEinteilungHealGroupXSlotX)
+function RaidOrganizer:RaiderOnMouseWheel(arg1)
+	return
+end
+
 function RaidOrganizer:OnMouseWheel(richtung) -- {{{
     if not this then
         return
@@ -2282,7 +2327,11 @@ end
 --      Event Handlers      --
 ------------------------------
 function RaidOrganizer:RAID_ROSTER_UPDATE()
-	if IsPlayerInRaid then 
+	self.senderTable = {{}, {}, {}, {}, {}, {}, {}, {}, {}}
+	if self.b_whosSyncingDisplay then
+		self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
+	end
+	if IsPlayerInRaid then
 		self:RefreshRaiderTable()
 		self:RefreshTables()
 		self:RoleAutoComplete()
@@ -2365,7 +2414,10 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 	if tab_id > SYNC_TAB_NB then
 		return
 	end
-	
+	self.senderTable[tab_id][sender] = 1;
+	if self.b_whosSyncingDisplay then
+		self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
+	end
 	if length == 0 then
 		RO_RaiderTable[tab_id] = {}; -- message to reset tab
 		return
@@ -2559,6 +2611,10 @@ function RaidOrganizer:RaidOrganizer_SyncOnClick()
 end
 
 function RaidOrganizer:RaidOrganizer_AskSync()
+	self.senderTable = {{}, {}, {}, {}, {}, {}, {}, {}, {}}
+	if self.b_whosSyncingDisplay then
+		self:TriggerEvent("RaidOrganizer_OnTooltipUpdate")
+	end
 	SendAddonMessage("RaidOrganizer", "ONLOAD 0", "RAID")
 end
 
@@ -2723,6 +2779,24 @@ function RaidOrganizer:TooltipUpdate(tablet)
 				end
 			end
 			if str1 ~= "" then cat:AddLine("text", "|c" .. color1 .. str1 .. "|r"); str1 = ""; str2 = ""; end
+		end
+		if RaidOrganizer.b_whosSyncingDisplay then
+			local cat2 = tablet:AddCategory(
+				'columns', 2,
+				'child_textR', 1, 'child_textG', 0.82, 'child_textB', 0,
+				'child_text2R', 1, 'child_text2G', 1, 'child_text2B', 1
+			)
+			local str1, str2 = "", "";
+			
+			cat2:AddLine("text", "|cffffffffWho is syncing :" .. "|r", 'size', 14);
+			cat2:AddLine("text", " ");
+			for i=1, SYNC_TAB_NB do
+				str1 = RaidOrganizer_Tabs[i][1]
+				for name,_ in pairs(RaidOrganizer.senderTable[i]) do
+					str2 = str2 .. "|cffffffff" .. name .. "|r "
+				end
+				cat2:AddLine("text", str1,"text2", str2); str1 = ""; str2 = "";
+			end
 		end
 		tablet:SetHint("|cffeda55fClick|r to show bar. |cffeda55fRightClick|r to show options. |cffeda55fShiftClick|r to show dialog. ")
 	else

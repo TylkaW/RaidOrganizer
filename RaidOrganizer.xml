@@ -77,6 +77,9 @@
             <OnDragStop>
                 RaidOrganizer:RaiderOnDragStop()
             </OnDragStop>
+			<OnMouseWheel>
+                RaidOrganizer:RaiderOnMouseWheel(arg1)
+            </OnMouseWheel>
         </Scripts>
     </Button>
     <!-- }}} -->
@@ -106,6 +109,12 @@
             </Layer>
         </Layers>
         <Scripts>
+			<OnLoad>
+				RaidOrganizer:GroupSlot_OnLoad();
+			</OnLoad>
+			<OnClick>
+				RaidOrganizer:GroupSlot_OnClick(arg1)
+			</OnClick>
             <OnMouseWheel>
                 RaidOrganizer:OnMouseWheel(arg1)
             </OnMouseWheel>
