@@ -2,14 +2,14 @@
 ## Title: Raid Organizer
 ## Notes: User friendly raid organizer
 ## Author: Tylka (based on Progman work)
-## Version: 0.9.912
+## Version: 0.9.913
 ## X-Category: Raid
 
 ## OptionalDeps: Ace2 DewdropLib
 ## X-Embeds: Ace2
 
-## SavedVariables: RaidOrganizerDB RaidOrganizerFubarDB
-## SavedVariablesPerCharacter: RaidOrganizerDBPerChar RO_RaiderTable RO_CurrentSet RO_MinimapPosition RO_HybrideSpec
+## SavedVariables: RaidOrganizerDB RaidOrganizerFubarDB RO_HybrideSpec
+## SavedVariablesPerCharacter: RaidOrganizerDBPerChar RO_RaiderTable RO_CurrentSet RO_syncTab
 
 Libs\AceLibrary\AceLibrary.lua
 Libs\AceOO-2.0\AceOO-2.0.lua

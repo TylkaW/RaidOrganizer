@@ -23,7 +23,6 @@ local grouplabels = {Rest = "GROUP_LOCALE_REMAINS", [1] = "GROUP_LOCALE_1", [2] 
 local MAX_GROUP_NB = 9
 
 local groupclasses = { {}, {}, {}, {}, {}, {}, {}, {}, {} }
-local isSync = {false, false, false, false, false, false, false, false, false}
 local newAttrib = {true, true, true, true, true, true,true, true, true}
 local classTab = {}
 
@@ -737,6 +736,10 @@ function RaidOrganizer:OnInitialize() -- {{{
 		end
 	end
     
+	if not RO_syncTab then
+		RO_syncTab = {false, false, false, false, false, false, false, false, false}
+	end
+	
 	RO_CLASS_COLOR["SHAMAN"].r = 0.0
 	RO_CLASS_COLOR["SHAMAN"].g = 0.44
 	RO_CLASS_COLOR["SHAMAN"].b = 0.87
@@ -1098,7 +1101,7 @@ function RaidOrganizer_SetTab(idx)
 		RaidOrganizerDialogEinteilungSetsDelete:Disable()
 		RaidOrganizerDialogEinteilungOptionenMultipleArrangementCheckBox:SetChecked(false)
 		RaidOrganizerDialogEinteilungOptionenDisplayGroupNb:SetChecked(true)
-	elseif isSync[idx] == true then
+	elseif RO_syncTab[idx] == true then
 		RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
 		RaidOrganizerDialogBroadcastAutoSyncText:SetText("Sync Send")
 		RaidOrganizerDialogBroadcastAutoSync:SetChecked(true)
@@ -2349,7 +2352,7 @@ function RaidOrganizer:RAID_ROSTER_UPDATE()
 			self:ResetData()
 		elseif (IsRaidLeader() or IsRaidOfficer()) then
 			for tab = 1, SYNC_TAB_NB do
-				if isSync[tab] == true then
+				if RO_syncTab[tab] == true then
 					RaidOrganizer:RaidOrganizer_SendSync(tab);
 				end
 			end
@@ -2380,7 +2383,7 @@ function RaidOrganizer:CHAT_MSG_ADDON(prefix, message, type, sender)
 			return
 		elseif (IsRaidLeader() or IsRaidOfficer()) then
 			for tab = 1, SYNC_TAB_NB do
-				if isSync[tab] == true then
+				if RO_syncTab[tab] == true then
 					RaidOrganizer:RaidOrganizer_SendSync(tab);
 				end
 			end
@@ -2464,17 +2467,17 @@ function RaidOrganizer:AutoSync_OnClick()
 		end
 	elseif RaidOrganizerDialogBroadcastAutoSync:GetChecked() then
 		if not ((IsRaidLeader() or IsRaidOfficer())) then
-			isSync[RaidOrganizerDialog.selectedTab] = false
+			RO_syncTab[RaidOrganizerDialog.selectedTab] = false
 			RaidOrganizerDialogBroadcastAutoSync:SetChecked(false)
 			RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
 			DEFAULT_CHAT_FRAME:AddMessage("RaidOrganizer : Can't set Send Sync checkbox if not raid lead or assistant")
 		else
 			RaidOrganizerDialogBroadcastSync:SetText("Send Sync")
-			isSync[RaidOrganizerDialog.selectedTab] = true
+			RO_syncTab[RaidOrganizerDialog.selectedTab] = true
 		end
 	else
 		RaidOrganizerDialogBroadcastSync:SetText("Ask Sync")
-		isSync[RaidOrganizerDialog.selectedTab] = false
+		RO_syncTab[RaidOrganizerDialog.selectedTab] = false
 	end
 end
 		
